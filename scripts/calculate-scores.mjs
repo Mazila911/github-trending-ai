@@ -172,10 +172,116 @@ function calculateComprehensiveScore(project, maxValues) {
   );
 }
 
+/**
+ * 计算 AI 质量评分
+ * 基于可用的项目元数据进行多维度评估
+ *
+ * @param {object} project - 项目对象
+ * @returns {number} AI 质量评分 (0-100)
+ */
+function calculateAIQualityScore(project) {
+  // 1. 代码质量代理 (20%) — license, not archived, has_discussions, size
+  const licenseScore = (() => {
+    const permissive = ['MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'ISC'];
+    if (permissive.includes(project.license_spdx)) return 1.0;
+    if (project.license_spdx?.startsWith('GPL') || project.license_spdx?.startsWith('AGPL')) return 0.7;
+    if (project.license_spdx) return 0.5;
+    return 0.2;
+  })();
+  const codeQuality = (
+    0.35 * licenseScore +
+    0.25 * (project.archived ? 0 : 1) +
+    0.20 * (project.has_discussions ? 1 : 0) +
+    0.20 * Math.min(1, (project.size_kb || 0) / 50000)
+  ) * 100;
+
+  // 2. 文档完整度代理 (15%) — readme_summary, has_wiki, topics count
+  const hasReadme = project.readme_summary ? 1 : 0;
+  const topicRichness = Math.min(1, (project.topics?.length || 0) / 5);
+  const docScore = (
+    0.40 * hasReadme +
+    0.30 * (project.has_wiki ? 1 : 0) +
+    0.30 * topicRichness
+  ) * 100;
+
+  // 3. 社区健康度代理 (15%) — contributors, forks ratio, discussions
+  const contributorDiversity = (() => {
+    const c = project.contributors_count || 0;
+    if (c <= 1) return 0.3;
+    if (c <= 5) return 0.6;
+    if (c <= 20) return 0.8;
+    return 1.0;
+  })();
+  const forkRatio = project.stargazers_count > 0
+    ? Math.min(1, (project.forks_count / project.stargazers_count) * 5)
+    : 0;
+  const communityScore = (
+    0.40 * contributorDiversity +
+    0.30 * forkRatio +
+    0.30 * (project.has_discussions ? 1 : 0)
+  ) * 100;
+
+  // 4. 项目活跃度 (15%) — pushed_at freshness
+  const daysSincePush = (Date.now() - new Date(project.pushed_at).getTime()) / (1000 * 60 * 60 * 24);
+  const activityScore = freshnessDecay(daysSincePush) * 100;
+
+  // 5. 创新性代理 (15%) — AI-related topics, unique language, trending velocity
+  const aiTopics = ['llm', 'ai', 'machine-learning', 'deep-learning', 'nlp', 'gpt',
+    'transformer', 'neural-network', 'rag', 'agent', 'ai-agent', 'generative-ai',
+    'langchain', 'openai', 'diffusion', 'fine-tuning', 'vector-database', 'embedding'];
+  const topicMatches = (project.topics || []).filter(t =>
+    aiTopics.some(at => t.toLowerCase().includes(at))
+  ).length;
+  const aiRelevance = Math.min(1, topicMatches / 3);
+  const todayStars = project.trending_history?.[0]?.stars_gained || 0;
+  const velocitySignal = Math.min(1, todayStars / 500);
+  const innovationScore = (
+    0.50 * aiRelevance +
+    0.30 * velocitySignal +
+    0.20 * (project.homepage ? 1 : 0)
+  ) * 100;
+
+  // 6. 实用性代理 (10%) — stars as popularity signal, not too many open issues
+  const starSignal = logNormalize(project.stargazers_count) / 100;
+  const issueRatio = project.stargazers_count > 0
+    ? Math.max(0, 1 - (project.open_issues_count || 0) / project.stargazers_count)
+    : 0.5;
+  const practicalityScore = (
+    0.60 * starSignal +
+    0.40 * issueRatio
+  ) * 100;
+
+  // 7. 生态适配性代理 (10%) — forks, watchers relative to stars
+  const watcherSignal = Math.min(1, (project.watchers_count || 0) / 500);
+  const forkSignal = logNormalize(project.forks_count) / 100;
+  const ecosystemScore = (
+    0.50 * forkSignal +
+    0.50 * watcherSignal
+  ) * 100;
+
+  // 加权求和
+  const totalScore = (
+    0.20 * codeQuality +
+    0.15 * docScore +
+    0.15 * communityScore +
+    0.15 * activityScore +
+    0.15 * innovationScore +
+    0.10 * practicalityScore +
+    0.10 * ecosystemScore
+  );
+
+  return Math.round(Math.max(0, Math.min(100, totalScore)));
+}
+
 function main() {
   console.log('[Score] Calculating scores...');
 
   const projects = JSON.parse(readFileSync(DATA_FILE, 'utf-8'));
+
+  // 计算所有项目的 AI 质量评分
+  for (const project of projects) {
+    project.ai_quality_score = calculateAIQualityScore(project);
+  }
 
   // 先遍历所有项目计算各 trending 指标的实际最大值
   const maxValues = computeTrendingMaxValues(projects);

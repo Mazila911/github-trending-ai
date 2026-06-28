@@ -60,7 +60,18 @@ const pageDescription = project.description_zh || project.description || '';
 ---
 
 <BaseLayout title={project.full_name} description={pageDescription}>
-  <div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto px-4 py-8" data-pagefind-body>
+    <!-- Pagefind metadata (hidden) -->
+    <div class="hidden">
+      <span data-pagefind-meta="owner_login">{project.owner_login}</span>
+      <span data-pagefind-meta="name">{project.name}</span>
+      <span data-pagefind-meta="stargazers_count">{String(project.stargazers_count)}</span>
+      <span data-pagefind-meta="language">{project.language || ''}</span>
+      <span data-pagefind-meta="owner_avatar_url">{project.owner_avatar_url || ''}</span>
+      <span data-pagefind-meta="ai_quality_score">{String(project.ai_quality_score || 0)}</span>
+      <span data-pagefind-meta="description_zh">{project.description_zh || ''}</span>
+      <span data-pagefind-meta="description">{project.description || ''}</span>
+    </div>
     <!-- Breadcrumb -->
     <nav class="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] mb-6">
       <a href="/trending" class="hover:text-[var(--color-accent)] transition-colors">榜单</a>

@@ -22,7 +22,8 @@ const SPOTLIGHT_DEFINITIONS = [
     description_zh: '构建 LLM 驱动应用的热门框架',
     icon: '🤖',
     category: 'frameworks',
-    keywords: ['llm', 'langchain', 'llamaindex', 'vllm'],
+    keywords: ['llm', 'langchain', 'llamaindex', 'vllm', 'llms', 'gpt', 'chatgpt', 'openai', 'nlp', 'transformers'],
+    descriptionPatterns: ['llm', 'large language model', 'language model', 'gpt', 'chatbot'],
   },
   {
     slug: 'rag-tools',
@@ -32,7 +33,8 @@ const SPOTLIGHT_DEFINITIONS = [
     description_zh: '检索增强生成与知识管理工具',
     icon: '📚',
     category: 'data',
-    keywords: ['rag', 'vector-database', 'embeddings'],
+    keywords: ['rag', 'vector-database', 'embeddings', 'vector-search', 'vector-store', 'embedding-database', 'embedding-store', 'similarity-search', 'neural-search', 'search-engine', 'vector-search-engine', 'hnsw', 'faiss', 'knowledge-base', 'knowledge-graph'],
+    descriptionPatterns: ['vector', 'embedding', 'retrieval', 'semantic search', 'knowledge base'],
   },
   {
     slug: 'ai-agents',
@@ -42,7 +44,8 @@ const SPOTLIGHT_DEFINITIONS = [
     description_zh: '构建自主 AI 智能体的框架与工具',
     icon: '🕹️',
     category: 'agents',
-    keywords: ['ai-agent', 'agent', 'autonomous'],
+    keywords: ['ai-agent', 'agent', 'autonomous', 'ai-agents', 'agents', 'multi-agent', 'orchestration', 'mcp'],
+    descriptionPatterns: ['agent', 'autonomous', 'orchestrat'],
   },
   {
     slug: 'code-gen',
@@ -52,7 +55,8 @@ const SPOTLIGHT_DEFINITIONS = [
     description_zh: 'AI 驱动的代码生成与开发工具',
     icon: '💻',
     category: 'tools',
-    keywords: ['code-generation', 'copilot'],
+    keywords: ['code-generation', 'copilot', 'ide', 'vscode', 'dev-tools', 'developer-tools', 'devtools', 'linter', 'typechecker', 'lsp-server'],
+    descriptionPatterns: ['code generation', 'code assist', 'developer tool', 'coding', 'IDE', 'development environment'],
   },
   {
     slug: 'multimodal',
@@ -62,7 +66,8 @@ const SPOTLIGHT_DEFINITIONS = [
     description_zh: '处理多种数据模态的模型与工具',
     icon: '🎨',
     category: 'models',
-    keywords: ['multimodal', 'image-generation'],
+    keywords: ['multimodal', 'image-generation', 'stable-diffusion', 'diffusion', 'computer-vision', 'image2image', 'text2image', 'txt2img', 'img2img', 'whisper', 'gradio', 'ai-art', 'generative-art', 'inpainting', 'upscaling'],
+    descriptionPatterns: ['image generat', 'diffusion', 'multimodal', 'computer vision', 'text-to-image', 'image-to-image', 'speech', 'visual'],
   },
   {
     slug: 'training',
@@ -72,7 +77,8 @@ const SPOTLIGHT_DEFINITIONS = [
     description_zh: '模型微调与训练工具',
     icon: '🏋️',
     category: 'training',
-    keywords: ['fine-tuning', 'training', 'lora'],
+    keywords: ['fine-tuning', 'training', 'lora', 'pytorch', 'tensorflow', 'cuda', 'mixed-precision-training', 'quantization', 'pruning', 'autodiff', 'tensor', 'deep-learning', 'neural-network', 'machine-learning'],
+    descriptionPatterns: ['fine-tun', 'train', 'model', 'neural', 'deep learning', 'machine learning', 'pytorch', 'tensorflow'],
   },
   {
     slug: 'infra',
@@ -82,7 +88,8 @@ const SPOTLIGHT_DEFINITIONS = [
     description_zh: 'AI 模型部署与服务基础设施',
     icon: '⚡',
     category: 'infra',
-    keywords: ['inference', 'serving', 'mlops'],
+    keywords: ['inference', 'serving', 'mlops', 'kubernetes', 'docker', 'cloud-native', 'distributed', 'monitoring', 'observability', 'opentelemetry', 'prometheus', 'grafana'],
+    descriptionPatterns: ['inference', 'serving', 'deploy', 'mlops', 'model serving', 'orchestrat'],
   },
   {
     slug: 'data-tools',
@@ -92,7 +99,8 @@ const SPOTLIGHT_DEFINITIONS = [
     description_zh: '数据处理、ETL 和分析工具',
     icon: '📊',
     category: 'data',
-    keywords: ['etl', 'data-pipeline'],
+    keywords: ['etl', 'data-pipeline', 'data-pipelines', 'data-processing', 'data-engineering', 'data-analytics', 'data-analysis', 'data-science', 'dataframe', 'polars', 'apache-arrow', 'duckdb', 'bigdata', 'stream-processing', 'batch-processing', 'data-warehouse', 'data-lake', 'analytics', 'business-intelligence'],
+    descriptionPatterns: ['data process', 'data pipelin', 'ETL', 'analytics', 'data warehouse', 'data lake', 'dataframe'],
   },
 ];
 
@@ -117,7 +125,22 @@ function main() {
 
         // topics 关键词匹配（不区分大小写）
         const topics = (project.topics || []).map((t) => t.toLowerCase());
-        return def.keywords.some((keyword) => topics.includes(keyword.toLowerCase()));
+        const topicMatch = def.keywords.some((keyword) => topics.includes(keyword.toLowerCase()));
+        if (topicMatch) return true;
+
+        // ai_tags 匹配
+        const aiTags = (project.ai_tags || []).map((t) => t.toLowerCase());
+        const aiTagMatch = def.keywords.some((keyword) => aiTags.includes(keyword.toLowerCase()));
+        if (aiTagMatch) return true;
+
+        // 描述模式匹配（不区分大小写）
+        if (def.descriptionPatterns) {
+          const desc = `${project.description || ''} ${project.description_zh || ''} ${project.name || ''}`.toLowerCase();
+          const descMatch = def.descriptionPatterns.some((pattern) => desc.includes(pattern.toLowerCase()));
+          if (descMatch) return true;
+        }
+
+        return false;
       })
       .sort((a, b) => b.ai_quality_score - a.ai_quality_score)
       .slice(0, MAX_PROJECTS_PER_SPOTLIGHT);
