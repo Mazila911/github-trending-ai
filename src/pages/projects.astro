@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/trending/ProjectCard.astro';
+import { getProjects } from '../lib/data';
+
+const projects = getProjects();
+const sortedProjects = [...projects].sort((a, b) => b.stargazers_count - a.stargazers_count);
+---
+
+<BaseLayout title="全部项目" description="浏览所有 AI 开源项目">
+  <section class="max-w-6xl mx-auto px-4 py-8">
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">全部项目</h1>
+      <p class="mt-2 text-[var(--color-text-secondary)]">
+        共收录 {sortedProjects.length} 个 AI 相关开源项目
+      </p>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      {sortedProjects.map((project, index) => (
+        <ProjectCard project={project} rank={index + 1} />
+      ))}
+    </div>
+  </section>
+</BaseLayout>

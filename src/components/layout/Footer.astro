@@ -1,0 +1,39 @@
+---
+const currentYear = new Date().getFullYear();
+---
+
+<footer class="border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)]">
+  <div class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+    <div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+      <!-- Branding -->
+      <div class="flex flex-col items-center gap-1 sm:items-start">
+        <span class="text-sm font-semibold text-[var(--color-text-primary)]">GitHub Trending AI</span>
+        <span class="text-xs text-[var(--color-text-muted)]">数据每日自动更新</span>
+      </div>
+
+      <!-- Links -->
+      <div class="flex items-center gap-4">
+        <a
+          href="https://github.com/user/github-trending-ai"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors duration-200"
+        >
+          GitHub
+        </a>
+        <span class="text-[var(--color-text-muted)]">|</span>
+        <a
+          href="/about"
+          class="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors duration-200"
+        >
+          About
+        </a>
+      </div>
+
+      <!-- Copyright -->
+      <p class="text-xs text-[var(--color-text-muted)]">
+        &copy; {currentYear} GTAI. All rights reserved.
+      </p>
+    </div>
+  </div>
+</footer>

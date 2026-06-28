@@ -1,0 +1,71 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getSpotlights, getProjectById } from '../lib/data';
+import { formatDate } from '../lib/format';
+import type { Spotlight } from '../types/index';
+
+const spotlights = getSpotlights();
+---
+
+<BaseLayout title="AI 精选专题">
+  <section class="max-w-5xl mx-auto px-4 py-12">
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-[var(--color-text-primary)]">AI 精选专题</h1>
+      <p class="mt-2 text-[var(--color-text-secondary)]">
+        基于 AI 智能筛选，按技术领域分类的优质开源项目合集
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {spotlights.map((spotlight: Spotlight) => {
+        const previewProjects = spotlight.project_ids.slice(0, 5).map(id => getProjectById(id)).filter(Boolean);
+        return (
+          <a
+            href={`/collection/${spotlight.slug}`}
+            class="group block rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-6 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:border-[var(--color-accent)]/30"
+          >
+            <div class="flex items-start gap-4">
+              <span class="text-4xl shrink-0" role="img" aria-label={spotlight.title_zh}>
+                {spotlight.icon}
+              </span>
+              <div class="flex-1 min-w-0">
+                <h2 class="text-lg font-semibold text-[var(--color-text-primary)] group-hover:text-[var(--color-accent)] transition-colors">
+                  {spotlight.title_zh}
+                </h2>
+                <p class="mt-1 text-sm text-[var(--color-text-secondary)] line-clamp-2">
+                  {spotlight.description_zh}
+                </p>
+
+                <div class="mt-4 flex items-center gap-3">
+                  {previewProjects.length > 0 && (
+                    <div class="flex -space-x-2">
+                      {previewProjects.map((p) => (
+                        <img
+                          src={p!.owner_avatar_url}
+                          alt={p!.owner_login}
+                          class="w-6 h-6 rounded-full border-2 border-[var(--color-bg-card)]"
+                          loading="lazy"
+                          width="24"
+                          height="24"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div class="mt-4 flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+                  <span>{spotlight.project_count} 个项目</span>
+                  <span>更新于 {formatDate(spotlight.updated_at)}</span>
+                </div>
+
+                <div class="mt-3 text-sm font-medium text-[var(--color-accent)] group-hover:text-[var(--color-accent-hover)] transition-colors">
+                  查看详情 →
+                </div>
+              </div>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+</BaseLayout>

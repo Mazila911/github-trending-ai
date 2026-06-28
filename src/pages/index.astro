@@ -1,0 +1,258 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getTopTrendingProjects, getSpotlights } from '../lib/data';
+import { formatStars, getLanguageColor } from '../lib/format';
+import type { Project, Spotlight } from '../types/index';
+
+const topProjects = getTopTrendingProjects(5);
+const spotlights = getSpotlights();
+
+const hotTags = ['LLM', 'RAG', 'Agent', 'Vector DB', 'Fine-tuning', 'MLOps', 'Multimodal', 'Code Gen'];
+
+const top3 = topProjects.slice(0, 3);
+const top45 = topProjects.slice(3, 5);
+---
+
+<BaseLayout title="首页">
+  <!-- Hero Section -->
+  <section class="py-16 md:py-24 px-4">
+    <div class="mx-auto max-w-[720px] text-center">
+      <h1 class="text-3xl md:text-5xl font-bold text-[var(--color-text-primary)] leading-tight">
+        发现 AI 开发者最爱的开源项目
+      </h1>
+      <p class="mt-4 text-lg md:text-xl text-[var(--color-text-secondary)]">
+        实时追踪 GitHub 热门项目，AI 精选专题推荐
+      </p>
+
+      <!-- Search Input -->
+      <form
+        action="/search"
+        method="get"
+        class="mt-8"
+      >
+        <div class="relative">
+          <svg
+            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--color-text-muted)]"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+          </svg>
+          <input
+            type="text"
+            name="q"
+            placeholder="搜索项目、技术栈、关键词..."
+            class="w-full h-14 pl-12 pr-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-lg placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-colors"
+          />
+        </div>
+      </form>
+
+      <!-- Hot Tags -->
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-2">
+        <span class="text-sm text-[var(--color-text-muted)]">热门：</span>
+        {hotTags.map((tag) => (
+          <a
+            href={`/search?q=${encodeURIComponent(tag)}`}
+            class="px-3 py-1.5 text-sm rounded-full border border-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] hover:border-[var(--color-accent)] transition-colors"
+          >
+            {tag}
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Today's Top 5 Section -->
+  <section class="py-12 px-4">
+    <div class="mx-auto max-w-5xl">
+      <h2 class="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
+        🔥 今日热门 Top 5
+      </h2>
+
+      <!-- Top 1-3: Large Cards -->
+      <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        {top3.map((project, index) => {
+          const rank = index + 1;
+          const description = project.description_zh || project.description || '';
+          const starsFormatted = formatStars(project.stargazers_count);
+          const languageColor = project.language ? getLanguageColor(project.language) : null;
+          const history = project.trending_history || [];
+          const todayRecord = history.length > 0 ? history[0] : null;
+          const starsGained = todayRecord?.stars_gained || 0;
+          const rankColor = rank === 1
+            ? 'var(--color-rank-gold)'
+            : rank === 2
+              ? 'var(--color-rank-silver)'
+              : 'var(--color-rank-bronze)';
+
+          return (
+            <a
+              href={`/repo/${project.owner_login}/${project.name}`}
+              class="block rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-[var(--color-accent)]/30"
+            >
+              <div class="flex items-center gap-3 mb-3">
+                <span
+                  class="text-2xl font-bold"
+                  style={`color: ${rankColor}`}
+                >
+                  #{rank}
+                </span>
+                <img
+                  src={project.owner_avatar_url}
+                  alt={`${project.owner_login} avatar`}
+                  class="w-8 h-8 rounded-full"
+                  loading="lazy"
+                  width="32"
+                  height="32"
+                />
+                <span class="text-sm font-semibold text-[var(--color-text-primary)] truncate">
+                  {project.full_name}
+                </span>
+              </div>
+
+              <p class="text-sm text-[var(--color-text-secondary)] line-clamp-2 min-h-[2.5rem]">
+                {description}
+              </p>
+
+              <div class="mt-4 flex flex-wrap items-center gap-3 text-xs">
+                {project.language && languageColor && (
+                  <span class="inline-flex items-center gap-1.5 text-[var(--color-text-secondary)]">
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0" style={`background-color: ${languageColor}`}></span>
+                    {project.language}
+                  </span>
+                )}
+                <span class="inline-flex items-center gap-1 text-[var(--color-star)]">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+                  {starsFormatted}
+                </span>
+                {starsGained > 0 && (
+                  <span class="inline-flex items-center gap-1 text-[var(--color-success)] font-medium">
+                    +{starsGained}
+                  </span>
+                )}
+              </div>
+            </a>
+          );
+        })}
+      </div>
+
+      <!-- Top 4-5: Compact Rows -->
+      <div class="mt-4 space-y-2">
+        {top45.map((project, index) => {
+          const rank = index + 4;
+          const starsFormatted = formatStars(project.stargazers_count);
+          const languageColor = project.language ? getLanguageColor(project.language) : null;
+          const history = project.trending_history || [];
+          const todayRecord = history.length > 0 ? history[0] : null;
+          const starsGained = todayRecord?.stars_gained || 0;
+
+          return (
+            <a
+              href={`/repo/${project.owner_login}/${project.name}`}
+              class="flex items-center gap-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] px-4 py-3 transition-colors hover:bg-[var(--color-bg-hover)] hover:border-[var(--color-accent)]/30"
+            >
+              <span class="text-lg font-bold text-[var(--color-text-muted)] w-6 text-center shrink-0">
+                {rank}
+              </span>
+              <img
+                src={project.owner_avatar_url}
+                alt={`${project.owner_login} avatar`}
+                class="w-8 h-8 rounded-full shrink-0"
+                loading="lazy"
+                width="32"
+                height="32"
+              />
+              <div class="flex-1 min-w-0">
+                <span class="text-sm font-semibold text-[var(--color-text-primary)] truncate block">
+                  {project.full_name}
+                </span>
+                <span class="text-xs text-[var(--color-text-secondary)] truncate block">
+                  {project.description_zh || project.description || ''}
+                </span>
+              </div>
+              <div class="flex items-center gap-3 text-xs shrink-0">
+                {project.language && languageColor && (
+                  <span class="hidden sm:inline-flex items-center gap-1.5 text-[var(--color-text-secondary)]">
+                    <span class="w-2.5 h-2.5 rounded-full shrink-0" style={`background-color: ${languageColor}`}></span>
+                    {project.language}
+                  </span>
+                )}
+                <span class="inline-flex items-center gap-1 text-[var(--color-star)]">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+                  {starsFormatted}
+                </span>
+                {starsGained > 0 && (
+                  <span class="text-[var(--color-success)] font-medium">
+                    +{starsGained}
+                  </span>
+                )}
+              </div>
+            </a>
+          );
+        })}
+      </div>
+
+      <!-- View All Link -->
+      <div class="mt-6 text-center">
+        <a
+          href="/trending"
+          class="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] font-medium transition-colors"
+        >
+          查看完整榜单
+          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Spotlight Section -->
+  <section class="py-12 px-4">
+    <div class="mx-auto max-w-5xl">
+      <h2 class="text-2xl md:text-3xl font-bold text-[var(--color-text-primary)]">
+        ✨ AI 精选专题
+      </h2>
+
+      <!-- Horizontal Scrollable Cards -->
+      <div class="mt-8 flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+        {spotlights.map((spotlight) => (
+          <a
+            href={`/collection/${spotlight.slug}`}
+            class="flex-none w-64 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-[var(--color-accent)]/30"
+          >
+            <div class="text-3xl mb-3">{spotlight.icon}</div>
+            <h3 class="text-base font-semibold text-[var(--color-text-primary)]">
+              {spotlight.title_zh}
+            </h3>
+            <p class="mt-1 text-sm text-[var(--color-text-secondary)] line-clamp-1">
+              {spotlight.description_zh}
+            </p>
+            <div class="mt-3 text-xs text-[var(--color-text-muted)]">
+              {spotlight.project_count} 个项目
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <!-- View All Link -->
+      <div class="mt-6 text-center">
+        <a
+          href="/collections"
+          class="inline-flex items-center gap-1 text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] font-medium transition-colors"
+        >
+          查看全部专题
+          <svg class="w-4 h-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+</style>

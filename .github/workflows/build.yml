@@ -1,0 +1,58 @@
+# .github/workflows/build.yml
+name: Build & Deploy
+
+on:
+  schedule:
+    - cron: '0 0,12 * * *'  # 每天 0:00 和 12:00 UTC
+  workflow_dispatch:
+    inputs:
+      force_full_crawl:
+        description: '强制全量抓取'
+        required: false
+        default: 'false'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Crawl GitHub Trending
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/crawl.mjs
+
+      - name: Calculate scores
+        run: node scripts/calculate-scores.mjs
+
+      - name: Generate spotlights
+        run: node scripts/generate-spotlights.mjs
+
+      - name: Cleanup expired projects
+        run: node scripts/cleanup.mjs
+
+      - name: Build Astro
+        run: npm run build
+
+      - name: Build search index
+        run: npx pagefind --site dist
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name github-trending-ai --branch main

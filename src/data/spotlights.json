@@ -1,0 +1,112 @@
+[
+  {
+    "slug": "llm-frameworks",
+    "title": "LLM Frameworks",
+    "title_zh": "LLM 框架与工具",
+    "description": "Popular frameworks for building LLM-powered applications",
+    "description_zh": "构建 LLM 驱动应用的热门框架",
+    "icon": "🤖",
+    "category": "frameworks",
+    "project_ids": [
+      1001,
+      1003,
+      1004,
+      1005
+    ],
+    "project_count": 4,
+    "updated_at": "2026-06-28T14:15:54.956Z"
+  },
+  {
+    "slug": "rag-tools",
+    "title": "RAG & Knowledge Base",
+    "title_zh": "RAG 与知识库",
+    "description": "Tools for retrieval-augmented generation and knowledge management",
+    "description_zh": "检索增强生成与知识管理工具",
+    "icon": "📚",
+    "category": "data",
+    "project_ids": [
+      1001,
+      1004
+    ],
+    "project_count": 2,
+    "updated_at": "2026-06-28T14:15:54.956Z"
+  },
+  {
+    "slug": "ai-agents",
+    "title": "AI Agents",
+    "title_zh": "AI Agent",
+    "description": "Frameworks and tools for building autonomous AI agents",
+    "description_zh": "构建自主 AI 智能体的框架与工具",
+    "icon": "🕹️",
+    "category": "agents",
+    "project_ids": [
+      1002,
+      1001,
+      1005
+    ],
+    "project_count": 3,
+    "updated_at": "2026-06-28T14:15:54.956Z"
+  },
+  {
+    "slug": "code-gen",
+    "title": "Code Generation",
+    "title_zh": "代码生成与辅助",
+    "description": "AI-powered code generation and development tools",
+    "description_zh": "AI 驱动的代码生成与开发工具",
+    "icon": "💻",
+    "category": "tools",
+    "project_ids": [],
+    "project_count": 0,
+    "updated_at": "2026-06-28T14:15:54.956Z"
+  },
+  {
+    "slug": "multimodal",
+    "title": "Multimodal AI",
+    "title_zh": "多模态 AI",
+    "description": "Models and tools for processing multiple data modalities",
+    "description_zh": "处理多种数据模态的模型与工具",
+    "icon": "🎨",
+    "category": "models",
+    "project_ids": [],
+    "project_count": 0,
+    "updated_at": "2026-06-28T14:15:54.956Z"
+  },
+  {
+    "slug": "training",
+    "title": "Model Training",
+    "title_zh": "模型训练与微调",
+    "description": "Tools for fine-tuning and training ML models",
+    "description_zh": "模型微调与训练工具",
+    "icon": "🏋️",
+    "category": "training",
+    "project_ids": [],
+    "project_count": 0,
+    "updated_at": "2026-06-28T14:15:54.956Z"
+  },
+  {
+    "slug": "infra",
+    "title": "AI Infrastructure",
+    "title_zh": "AI 基础设施",
+    "description": "Infrastructure for deploying and serving AI models",
+    "description_zh": "AI 模型部署与服务基础设施",
+    "icon": "⚡",
+    "category": "infra",
+    "project_ids": [
+      1003
+    ],
+    "project_count": 1,
+    "updated_at": "2026-06-28T14:15:54.956Z"
+  },
+  {
+    "slug": "data-tools",
+    "title": "Data Processing",
+    "title_zh": "数据处理与分析",
+    "description": "Tools for data processing, ETL, and analytics",
+    "description_zh": "数据处理、ETL 和分析工具",
+    "icon": "📊",
+    "category": "data",
+    "project_ids": [],
+    "project_count": 0,
+    "updated_at": "2026-06-28T14:15:54.956Z"
+  }
+]

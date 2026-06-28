@@ -1,0 +1,27 @@
+{
+  "name": "github-trending-ai",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "面向 AI 应用开发者的 GitHub 热门开源项目展示网站",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "build:full": "node scripts/crawl.mjs && node scripts/calculate-scores.mjs && node scripts/generate-spotlights.mjs && node scripts/cleanup.mjs && npm run build && npx pagefind --site dist",
+    "preview": "astro preview",
+    "crawl": "node scripts/crawl.mjs",
+    "scores": "node scripts/calculate-scores.mjs",
+    "spotlights": "node scripts/generate-spotlights.mjs",
+    "cleanup": "node scripts/cleanup.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "node-html-parser": "^6.1.0",
+    "pagefind": "^1.3.0",
+    "puppeteer": "^25.2.1",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0"
+  }
+}

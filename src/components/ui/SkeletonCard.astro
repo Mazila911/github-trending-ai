@@ -1,0 +1,54 @@
+---
+---
+
+<div class="skeleton-card rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-4">
+  <div class="flex items-start gap-4">
+    <!-- Rank skeleton -->
+    <div class="shrink-0 w-8 h-7 rounded skeleton-shimmer"></div>
+
+    <!-- Avatar skeleton -->
+    <div class="w-10 h-10 rounded-full shrink-0 skeleton-shimmer"></div>
+
+    <!-- Content skeleton -->
+    <div class="flex-1 min-w-0 space-y-3">
+      <!-- Title -->
+      <div class="h-5 w-48 rounded skeleton-shimmer"></div>
+
+      <!-- Description lines -->
+      <div class="space-y-2">
+        <div class="h-4 w-full rounded skeleton-shimmer"></div>
+        <div class="h-4 w-3/4 rounded skeleton-shimmer"></div>
+      </div>
+
+      <!-- Meta row -->
+      <div class="flex items-center gap-3">
+        <div class="h-4 w-14 rounded skeleton-shimmer"></div>
+        <div class="h-4 w-24 rounded skeleton-shimmer"></div>
+        <div class="h-4 w-16 rounded skeleton-shimmer"></div>
+        <div class="h-4 w-12 rounded skeleton-shimmer"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-bg-hover) 25%,
+      var(--color-bg-secondary) 50%,
+      var(--color-bg-hover) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+</style>

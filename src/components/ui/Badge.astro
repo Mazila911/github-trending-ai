@@ -1,0 +1,31 @@
+---
+interface Props {
+  text: string;
+  variant?: 'default' | 'success' | 'warning' | 'accent';
+  size?: 'sm' | 'md';
+}
+
+const { text, variant = 'default', size = 'sm' } = Astro.props;
+
+const variantClasses: Record<string, string> = {
+  default: 'bg-[var(--color-bg-hover)] text-[var(--color-text-secondary)]',
+  success: 'bg-[var(--color-success)]/15 text-[var(--color-success)]',
+  warning: 'bg-[var(--color-warning)]/15 text-[var(--color-warning)]',
+  accent: 'bg-[var(--color-accent)]/15 text-[var(--color-accent)]',
+};
+
+const sizeClasses: Record<string, string> = {
+  sm: 'px-2 py-0.5 text-xs',
+  md: 'px-3 py-1 text-sm',
+};
+---
+
+<span
+  class:list={[
+    'inline-flex items-center rounded-full font-medium whitespace-nowrap',
+    variantClasses[variant],
+    sizeClasses[size],
+  ]}
+>
+  {text}
+</span>

@@ -1,0 +1,67 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectCard from '../../components/trending/ProjectCard.astro';
+import { getSpotlights, getProjectsBySpotlight } from '../../lib/data';
+import type { Spotlight } from '../../types/index';
+
+export function getStaticPaths() {
+  const spotlights = getSpotlights();
+  return spotlights.map((s: Spotlight) => ({
+    params: { slug: s.slug },
+    props: { spotlight: s },
+  }));
+}
+
+interface Props {
+  spotlight: Spotlight;
+}
+
+const { spotlight } = Astro.props;
+const projects = getProjectsBySpotlight(spotlight.slug);
+---
+
+<BaseLayout title={spotlight.title_zh} description={spotlight.description_zh}>
+  <section class="max-w-5xl mx-auto px-4 py-12">
+    <div class="mb-8">
+      <a
+        href="/collections"
+        class="inline-flex items-center gap-1 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)] transition-colors mb-4"
+      >
+        <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+          <path fill-rule="evenodd" d="M7.78 12.53a.75.75 0 01-1.06 0L2.47 8.28a.75.75 0 010-1.06l4.25-4.25a.75.75 0 011.06 1.06L4.81 7h7.44a.75.75 0 010 1.5H4.81l2.97 2.97a.75.75 0 010 1.06z"/>
+        </svg>
+        返回全部专题
+      </a>
+
+      <div class="flex items-start gap-4">
+        <span class="text-5xl shrink-0" role="img" aria-label={spotlight.title_zh}>
+          {spotlight.icon}
+        </span>
+        <div>
+          <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">
+            {spotlight.title_zh}
+          </h1>
+          <p class="mt-2 text-[var(--color-text-secondary)]">
+            {spotlight.description_zh}
+          </p>
+          <p class="mt-2 text-sm text-[var(--color-text-muted)]">
+            共 {projects.length} 个项目
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-4">
+      {projects.map((project, index) => (
+        <ProjectCard project={project} rank={index + 1} />
+      ))}
+    </div>
+
+    {projects.length === 0 && (
+      <div class="text-center py-16 text-[var(--color-text-muted)]">
+        <p class="text-lg">暂无项目</p>
+        <p class="mt-2 text-sm">该专题下还没有收录项目</p>
+      </div>
+    )}
+  </section>
+</BaseLayout>

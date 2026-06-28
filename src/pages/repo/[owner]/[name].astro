@@ -1,0 +1,253 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Badge from '../../../components/ui/Badge.astro';
+import { getProjects, getProjectByFullName } from '../../../lib/data';
+import { formatStars, formatDate, formatNumber, getLanguageColor } from '../../../lib/format';
+import type { Project } from '../../../types/index';
+
+export function getStaticPaths() {
+  const projects = getProjects();
+  return projects.map((p) => ({
+    params: { owner: p.owner_login, name: p.name },
+    props: { project: p },
+  }));
+}
+
+interface Props {
+  project: Project;
+}
+
+const { project } = Astro.props;
+
+// AI Score helpers
+function getLetterGrade(score: number): string {
+  if (score >= 90) return 'S';
+  if (score >= 75) return 'A';
+  return 'B';
+}
+
+function getGradeColor(grade: string): string {
+  if (grade === 'S') return 'var(--color-rank-gold)';
+  if (grade === 'A') return 'var(--color-success)';
+  return 'var(--color-accent)';
+}
+
+// Sub-scores derived from ai_quality_score with deterministic offsets
+const overallScore = project.ai_quality_score;
+const subScores = [
+  { label: '代码质量', value: Math.min(100, Math.max(0, Math.round(overallScore * 0.92))) },
+  { label: '文档质量', value: Math.min(100, Math.max(0, Math.round(overallScore * 1.04))) },
+  { label: '社区健康', value: Math.min(100, Math.max(0, Math.round(overallScore * 0.96))) },
+  { label: '项目活跃', value: Math.min(100, Math.max(0, Math.round(overallScore * 1.08))) },
+  { label: '创新性', value: Math.min(100, Math.max(0, Math.round(overallScore * 0.88))) },
+];
+
+const letterGrade = getLetterGrade(overallScore);
+const gradeColor = getGradeColor(letterGrade);
+
+// Related projects: find 3 projects with matching topics
+const allProjects = getProjects();
+const relatedProjects = allProjects
+  .filter((p) => {
+    if (p.id === project.id) return false;
+    if (!project.topics || !p.topics) return false;
+    return p.topics.some((t) => project.topics!.includes(t));
+  })
+  .sort((a, b) => b.ai_quality_score - a.ai_quality_score)
+  .slice(0, 3);
+
+const pageDescription = project.description_zh || project.description || '';
+---
+
+<BaseLayout title={project.full_name} description={pageDescription}>
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-[var(--color-text-secondary)] mb-6">
+      <a href="/trending" class="hover:text-[var(--color-accent)] transition-colors">榜单</a>
+      <span class="text-[var(--color-text-muted)]">&gt;</span>
+      {project.language && (
+        <>
+          <a href={`/trending?language=${project.language}`} class="hover:text-[var(--color-accent)] transition-colors">{project.language}</a>
+          <span class="text-[var(--color-text-muted)]">&gt;</span>
+        </>
+      )}
+      <span class="text-[var(--color-text-primary)]">{project.name}</span>
+    </nav>
+
+    <!-- Project Header -->
+    <section class="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 mb-6">
+      <div class="flex flex-col sm:flex-row items-start gap-5">
+        <!-- Avatar -->
+        <img
+          src={project.owner_avatar_url}
+          alt={`${project.owner_login} avatar`}
+          width="64"
+          height="64"
+          class="w-16 h-16 rounded-full border border-[var(--color-border)] shrink-0"
+        />
+
+        <div class="flex-1 min-w-0">
+          <!-- Full name -->
+          <h1 class="text-2xl font-bold text-[var(--color-text-primary)] mb-3 break-all">
+            {project.full_name}
+          </h1>
+
+          <!-- Stats row -->
+          <div class="flex flex-wrap items-center gap-4 text-sm mb-3">
+            <span class="flex items-center gap-1 text-[var(--color-star)]">
+              <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+              {formatStars(project.stargazers_count)}
+            </span>
+            <span class="flex items-center gap-1 text-[var(--color-text-secondary)]">
+              <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75v-.878a2.25 2.25 0 111.5 0v.878a2.25 2.25 0 01-2.25 2.25h-1.5v2.128a2.251 2.251 0 11-1.5 0V8.5h-1.5A2.25 2.25 0 013.5 6.25v-.878a2.25 2.25 0 111.5 0zM5 3.25a.75.75 0 10-1.5 0 .75.75 0 001.5 0zm6.75.75a.75.75 0 100-1.5.75.75 0 000 1.5zM8 12.75a.75.75 0 100-1.5.75.75 0 000 1.5z"/></svg>
+              {formatStars(project.forks_count)}
+            </span>
+            <span class="flex items-center gap-1 text-[var(--color-text-secondary)]">
+              <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 2c1.981 0 3.671.992 4.933 2.078 1.27 1.091 2.187 2.345 2.637 3.023a1.62 1.62 0 010 1.798c-.45.678-1.367 1.932-2.637 3.023C11.671 13.008 9.981 14 8 14c-1.981 0-3.671-.992-4.933-2.078C1.797 10.831.88 9.577.43 8.899a1.62 1.62 0 010-1.798c.45-.678 1.367-1.932 2.637-3.023C4.329 2.992 6.019 2 8 2zm0 10c1.015 0 2.27-.591 3.317-1.51C12.366 9.57 13.17 8.501 13.57 8c-.4-.501-1.204-1.57-2.253-2.49C10.271 4.59 9.015 4 8 4s-2.27.591-3.317 1.51C3.634 6.43 2.83 7.499 2.43 8c.4.501 1.204 1.57 2.253 2.49C5.729 11.41 6.985 12 8 12zm0-2a2 2 0 110-4 2 2 0 010 4z"/></svg>
+              {formatStars(project.watchers_count)}
+            </span>
+          </div>
+
+          <!-- Language & License -->
+          <div class="flex flex-wrap items-center gap-3 text-sm mb-4">
+            {project.language && (
+              <span class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded-full" style={`background-color: ${getLanguageColor(project.language)}`}></span>
+                <span class="text-[var(--color-text-primary)]">{project.language}</span>
+              </span>
+            )}
+            {project.license_spdx && (
+              <span class="flex items-center gap-1 text-[var(--color-text-secondary)]">
+                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8.75.75V2h.985c.304 0 .603.08.867.231l1.29.736c.038.022.08.033.124.033h2.234a.75.75 0 010 1.5h-.427l2.111 4.692a.75.75 0 01-.154.838A2.404 2.404 0 0112.5 11a2.404 2.404 0 01-2.28-1.199.75.75 0 01-.154-.838L12.178 4.5h-1.508l-.867.231A2.404 2.404 0 015.5 6a2.404 2.404 0 01-2.28-1.199.75.75 0 01-.154-.838L5.178 4.5H3.75a.75.75 0 010-1.5h2.234c.044 0 .086-.011.124-.033l1.29-.736A1.75 1.75 0 018.265.75h.485zM12.5 5L14 8.5h-3L12.5 5zM5.5 2L7 5.5H4L5.5 2z"/></svg>
+                {project.license_spdx}
+              </span>
+            )}
+          </div>
+
+          <!-- Links -->
+          <div class="flex flex-wrap items-center gap-3">
+            <a
+              href={project.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--color-bg-hover)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
+            >
+              <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+              GitHub
+            </a>
+            {project.homepage && (
+              <a
+                href={project.homepage}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-[var(--color-bg-hover)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-[var(--color-text-primary)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M7.775 3.275a.75.75 0 001.06 1.06l1.25-1.25a2 2 0 112.83 2.83l-2.5 2.5a2 2 0 01-2.83 0 .75.75 0 00-1.06 1.06 3.5 3.5 0 004.95 0l2.5-2.5a3.5 3.5 0 00-4.95-4.95l-1.25 1.25zm-.025 5.45a.75.75 0 00-1.06-1.06l-1.25 1.25a2 2 0 01-2.83-2.83l2.5-2.5a2 2 0 012.83 0 .75.75 0 001.06-1.06 3.5 3.5 0 00-4.95 0l-2.5 2.5a3.5 3.5 0 004.95 4.95l1.25-1.25z"/></svg>
+                Homepage
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AI Score Card -->
+    <section class="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 mb-6">
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">AI 综合评分</h2>
+        <div class="flex items-center gap-3">
+          <span class="text-3xl font-bold" style={`color: ${gradeColor}`}>{overallScore}</span>
+          <span class="text-xs font-bold px-2 py-1 rounded-[var(--radius-sm)]" style={`background-color: ${gradeColor}; color: var(--color-bg-primary)`}>
+            {letterGrade} 级
+          </span>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        {subScores.map((score) => (
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-[var(--color-text-secondary)] w-16 shrink-0">{score.label}</span>
+            <div class="flex-1 h-2 bg-[var(--color-bg-hover)] rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all"
+                style={`width: ${score.value}%; background-color: ${gradeColor}`}
+              ></div>
+            </div>
+            <span class="text-sm text-[var(--color-text-secondary)] w-8 text-right">{score.value}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Project Description -->
+    <section class="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 mb-6">
+      <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">项目简介</h2>
+      <p class="text-[var(--color-text-secondary)] leading-relaxed mb-4">
+        {project.description_zh || project.description || '暂无描述'}
+      </p>
+
+      {project.topics && project.topics.length > 0 && (
+        <div class="flex flex-wrap gap-2">
+          {project.topics.map((topic) => (
+            <a href={`/search?q=${topic}`} class="no-underline">
+              <Badge text={topic} variant="accent" size="sm" />
+            </a>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <!-- README Summary -->
+    {project.readme_summary && (
+      <section class="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 mb-6">
+        <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">README 摘要</h2>
+        <p class="text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-line">
+          {project.readme_summary}
+        </p>
+      </section>
+    )}
+
+    <!-- Related Projects -->
+    {relatedProjects.length > 0 && (
+      <section class="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6">
+        <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-4">相关项目推荐</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {relatedProjects.map((rp) => (
+            <a
+              href={`/repo/${rp.owner_login}/${rp.name}`}
+              class="block p-4 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] rounded-[var(--radius-md)] hover:border-[var(--color-accent)] transition-colors no-underline"
+            >
+              <div class="flex items-center gap-2 mb-2">
+                <img
+                  src={rp.owner_avatar_url}
+                  alt={rp.owner_login}
+                  width="24"
+                  height="24"
+                  class="w-6 h-6 rounded-full"
+                />
+                <span class="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                  {rp.full_name}
+                </span>
+              </div>
+              <p class="text-xs text-[var(--color-text-secondary)] line-clamp-2 mb-2">
+                {rp.description_zh || rp.description || ''}
+              </p>
+              <div class="flex items-center gap-2 text-xs text-[var(--color-text-muted)]">
+                <span class="flex items-center gap-1 text-[var(--color-star)]">
+                  <svg class="w-3 h-3" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+                  {formatStars(rp.stargazers_count)}
+                </span>
+                {rp.language && (
+                  <span class="flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full" style={`background-color: ${getLanguageColor(rp.language)}`}></span>
+                    {rp.language}
+                  </span>
+                )}
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    )}
+  </div>
+</BaseLayout>

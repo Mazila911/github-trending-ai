@@ -1,0 +1,217 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/trending/ProjectCard.astro';
+import { getProjects } from '../lib/data';
+import type { Project } from '../types/index';
+
+const allProjects = getProjects();
+
+// Sort by comprehensive rank for initial render
+const sorted = [...allProjects].sort((a, b) => a.comprehensive_rank - b.comprehensive_rank);
+
+const periods = [
+  { value: 'daily', label: '今日' },
+  { value: 'weekly', label: '本周' },
+  { value: 'monthly', label: '本月' },
+];
+
+const languages = [
+  { value: '', label: '全部' },
+  { value: 'Python', label: 'Python' },
+  { value: 'TypeScript', label: 'TypeScript' },
+  { value: 'JavaScript', label: 'JavaScript' },
+  { value: 'Rust', label: 'Rust' },
+  { value: 'Go', label: 'Go' },
+  { value: 'Java', label: 'Java' },
+  { value: 'C++', label: 'C++' },
+  { value: 'Jupyter Notebook', label: 'Jupyter Notebook' },
+];
+
+const sortOptions = [
+  { value: 'comprehensive', label: '综合排名' },
+  { value: 'stars', label: 'Star 最多' },
+  { value: 'created', label: '最新创建' },
+  { value: 'updated', label: '最近更新' },
+  { value: 'ai_score', label: 'AI 评分最高' },
+];
+---
+
+<BaseLayout title="GitHub Trending AI 榜单" description="实时追踪 GitHub 热门 AI 开源项目排名">
+  <section class="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+    <h1 class="text-2xl sm:text-3xl font-bold text-[var(--color-text-primary)] mb-6">
+      GitHub Trending AI 榜单
+    </h1>
+
+    <!-- Filter bar -->
+    <div class="flex flex-col gap-4 mb-8 sm:flex-row sm:items-center sm:gap-6">
+      <!-- Period tabs -->
+      <nav class="flex gap-1 rounded-lg bg-[var(--color-bg-secondary)] p-1" aria-label="时间维度筛选">
+        {periods.map((p) => (
+          <button
+            type="button"
+            data-period={p.value}
+            class:list={[
+              'period-tab px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer',
+              p.value === 'daily'
+                ? 'bg-[var(--color-accent)] text-white active'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]',
+            ]}
+          >
+            {p.label}
+          </button>
+        ))}
+      </nav>
+
+      <!-- Language filter -->
+      <div class="flex flex-wrap gap-2 sm:contents">
+        <div class="relative">
+          <label for="language-select" class="sr-only">编程语言</label>
+          <select
+            id="language-select"
+            class="appearance-none bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] text-sm rounded-lg px-4 py-2 pr-8 cursor-pointer hover:border-[var(--color-accent)]/50 focus:outline-none focus:border-[var(--color-accent)]"
+          >
+            {languages.map((lang) => (
+              <option value={lang.value}>{lang.label}</option>
+            ))}
+          </select>
+          <svg class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)] pointer-events-none" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/>
+          </svg>
+        </div>
+
+        <!-- Sort filter -->
+        <div class="relative">
+          <label for="sort-select" class="sr-only">排序方式</label>
+          <select
+            id="sort-select"
+            class="appearance-none bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] text-sm rounded-lg px-4 py-2 pr-8 cursor-pointer hover:border-[var(--color-accent)]/50 focus:outline-none focus:border-[var(--color-accent)]"
+          >
+            {sortOptions.map((opt) => (
+              <option value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <svg class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)] pointer-events-none" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results count -->
+    <p id="results-count" class="text-sm text-[var(--color-text-muted)] mb-4">
+      共 {sorted.length} 个项目
+    </p>
+
+    <!-- Project list -->
+    <div id="project-list" class="flex flex-col gap-3">
+      {sorted.map((project, index) => (
+        <div
+          class="project-item"
+          data-language={project.language || ''}
+          data-stars={project.stargazers_count}
+          data-created={project.created_at}
+          data-updated={project.pushed_at}
+          data-ai-score={project.ai_quality_score}
+          data-rank={project.comprehensive_rank}
+        >
+          <ProjectCard project={project} rank={index + 1} />
+        </div>
+      ))}
+    </div>
+
+    <!-- Empty state -->
+    <div id="empty-state" class="hidden text-center py-16">
+      <p class="text-[var(--color-text-secondary)] text-lg">暂无匹配的项目</p>
+    </div>
+  </section>
+
+  <script>
+    const periodTabs = document.querySelectorAll('.period-tab');
+    const languageSelect = document.getElementById('language-select') as HTMLSelectElement;
+    const sortSelect = document.getElementById('sort-select') as HTMLSelectElement;
+    const projectList = document.getElementById('project-list')!;
+    const resultsCount = document.getElementById('results-count')!;
+    const emptyState = document.getElementById('empty-state')!;
+    const items = Array.from(document.querySelectorAll('.project-item')) as HTMLElement[];
+
+    let currentPeriod = 'daily';
+    let currentLanguage = '';
+    let currentSort = 'comprehensive';
+
+    function applyFilters() {
+      let visible = items;
+
+      // Language filter
+      if (currentLanguage) {
+        visible = visible.filter(el => el.dataset.language === currentLanguage);
+      }
+
+      // Hide all, then show visible
+      items.forEach(el => el.style.display = 'none');
+
+      // Sort
+      switch (currentSort) {
+        case 'stars':
+          visible.sort((a, b) => Number(b.dataset.stars) - Number(a.dataset.stars));
+          break;
+        case 'created':
+          visible.sort((a, b) => new Date(b.dataset.created!).getTime() - new Date(a.dataset.created!).getTime());
+          break;
+        case 'updated':
+          visible.sort((a, b) => new Date(b.dataset.updated!).getTime() - new Date(a.dataset.updated!).getTime());
+          break;
+        case 'ai_score':
+          visible.sort((a, b) => Number(b.dataset.aiScore) - Number(a.dataset.aiScore));
+          break;
+        case 'comprehensive':
+        default:
+          visible.sort((a, b) => Number(a.dataset.rank) - Number(b.dataset.rank));
+          break;
+      }
+
+      // Re-append in sorted order and show
+      visible.forEach(el => {
+        el.style.display = '';
+        projectList.appendChild(el);
+      });
+
+      // Update count
+      resultsCount.textContent = `共 ${visible.length} 个项目`;
+
+      // Empty state
+      if (visible.length === 0) {
+        emptyState.classList.remove('hidden');
+        projectList.classList.add('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+        projectList.classList.remove('hidden');
+      }
+    }
+
+    // Period tabs
+    periodTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        periodTabs.forEach(t => {
+          t.classList.remove('bg-[var(--color-accent)]', 'text-white', 'active');
+          t.classList.add('text-[var(--color-text-secondary)]');
+        });
+        tab.classList.add('bg-[var(--color-accent)]', 'text-white', 'active');
+        tab.classList.remove('text-[var(--color-text-secondary)]');
+        currentPeriod = (tab as HTMLElement).dataset.period || 'daily';
+        applyFilters();
+      });
+    });
+
+    // Language dropdown
+    languageSelect.addEventListener('change', () => {
+      currentLanguage = languageSelect.value;
+      applyFilters();
+    });
+
+    // Sort dropdown
+    sortSelect.addEventListener('change', () => {
+      currentSort = sortSelect.value;
+      applyFilters();
+    });
+  </script>
+</BaseLayout>
