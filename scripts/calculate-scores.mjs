@@ -1,5 +1,6 @@
 // scripts/calculate-scores.mjs
 import { readFileSync, writeFileSync } from 'fs';
+import { callLLM, batchCallLLM, isLLMAvailable } from './lib/llm.mjs';
 
 const DATA_FILE = 'src/data/projects.json';
 
@@ -225,21 +226,26 @@ function calculateAIQualityScore(project) {
   const daysSincePush = (Date.now() - new Date(project.pushed_at).getTime()) / (1000 * 60 * 60 * 24);
   const activityScore = freshnessDecay(daysSincePush) * 100;
 
-  // 5. 创新性代理 (15%) — AI-related topics, unique language, trending velocity
-  const aiTopics = ['llm', 'ai', 'machine-learning', 'deep-learning', 'nlp', 'gpt',
-    'transformer', 'neural-network', 'rag', 'agent', 'ai-agent', 'generative-ai',
-    'langchain', 'openai', 'diffusion', 'fine-tuning', 'vector-database', 'embedding'];
-  const topicMatches = (project.topics || []).filter(t =>
-    aiTopics.some(at => t.toLowerCase().includes(at))
-  ).length;
-  const aiRelevance = Math.min(1, topicMatches / 3);
-  const todayStars = project.trending_history?.[0]?.stars_gained || 0;
-  const velocitySignal = Math.min(1, todayStars / 500);
-  const innovationScore = (
-    0.50 * aiRelevance +
-    0.30 * velocitySignal +
-    0.20 * (project.homepage ? 1 : 0)
-  ) * 100;
+  // 5. 创新性代理 (15%) — 优先使用 LLM 评分，否则使用启发式计算
+  let innovationScore;
+  if (project.llm_innovation_score > 0) {
+    innovationScore = project.llm_innovation_score;
+  } else {
+    const aiTopics = ['llm', 'ai', 'machine-learning', 'deep-learning', 'nlp', 'gpt',
+      'transformer', 'neural-network', 'rag', 'agent', 'ai-agent', 'generative-ai',
+      'langchain', 'openai', 'diffusion', 'fine-tuning', 'vector-database', 'embedding'];
+    const topicMatches = (project.topics || []).filter(t =>
+      aiTopics.some(at => t.toLowerCase().includes(at))
+    ).length;
+    const aiRelevance = Math.min(1, topicMatches / 3);
+    const todayStars = project.trending_history?.[0]?.stars_gained || 0;
+    const velocitySignal = Math.min(1, todayStars / 500);
+    innovationScore = (
+      0.50 * aiRelevance +
+      0.30 * velocitySignal +
+      0.20 * (project.homepage ? 1 : 0)
+    ) * 100;
+  }
 
   // 6. 实用性代理 (10%) — stars as popularity signal, not too many open issues
   const starSignal = logNormalize(project.stargazers_count) / 100;
@@ -273,10 +279,74 @@ function calculateAIQualityScore(project) {
   return Math.round(Math.max(0, Math.min(100, totalScore)));
 }
 
-function main() {
+/**
+ * 构建创新性评估 prompt
+ * @param {object} project - 项目对象
+ * @returns {string} prompt
+ */
+function buildInnovationPrompt(project) {
+  const lines = [
+    'Please evaluate the innovation score (0-100) of the following AI/tech open-source project.',
+    'Consider: novelty of approach, uniqueness in the ecosystem, potential impact, and technical creativity.',
+    '',
+    `Project: ${project.full_name || project.name}`,
+    `Description: ${project.description || 'N/A'}`,
+    `Topics: ${(project.topics || []).join(', ') || 'N/A'}`,
+    `Language: ${project.language || 'N/A'}`,
+    `README Summary: ${project.readme_summary || 'N/A'}`,
+    '',
+    'Reply with ONLY an integer between 0 and 100.',
+  ];
+  return lines.join('\n');
+}
+
+/**
+ * 评估单个项目的创新性分数
+ * @param {object} project - 项目对象
+ * @returns {Promise<number|null>} 0-100 分数或 null
+ */
+async function evaluateInnovation(project) {
+  const prompt = buildInnovationPrompt(project);
+  const result = await callLLM(prompt);
+  if (!result) return null;
+
+  const match = result.match(/\d+/);
+  if (!match) return null;
+
+  const score = parseInt(match[0], 10);
+  if (score < 0 || score > 100) return null;
+  return score;
+}
+
+async function main() {
   console.log('[Score] Calculating scores...');
 
   const projects = JSON.parse(readFileSync(DATA_FILE, 'utf-8'));
+
+  // LLM 创新性评估
+  if (isLLMAvailable()) {
+    const needsEval = projects.filter(p => !p.llm_innovation_score);
+    if (needsEval.length > 0) {
+      console.log(`[Score] Evaluating ${needsEval.length} projects via LLM...`);
+      const tasks = needsEval.map(p => ({ id: p.id, prompt: buildInnovationPrompt(p) }));
+      const results = await batchCallLLM(tasks, 5);
+      let evaluated = 0;
+      for (const project of needsEval) {
+        const raw = results.get(project.id);
+        if (raw) {
+          const match = raw.match(/\d+/);
+          if (match) {
+            const score = parseInt(match[0], 10);
+            if (score >= 0 && score <= 100) {
+              project.llm_innovation_score = score;
+              evaluated++;
+            }
+          }
+        }
+      }
+      console.log(`[Score] LLM evaluated ${evaluated}/${needsEval.length} projects`);
+    }
+  }
 
   // 计算所有项目的 AI 质量评分
   for (const project of projects) {
@@ -304,4 +374,4 @@ function main() {
   console.log(`[Score] Updated ${projects.length} projects`);
 }
 
-main();
+main().catch(console.error);
