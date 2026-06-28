@@ -127,7 +127,7 @@ const top45 = topProjects.slice(3, 5);
                 </span>
                 {starsGained > 0 && (
                   <span class="inline-flex items-center gap-1 text-[var(--color-success)] font-medium">
-                    +{starsGained}
+                    +{starsGained.toLocaleString()} stars today
                   </span>
                 )}
               </div>
@@ -183,7 +183,7 @@ const top45 = topProjects.slice(3, 5);
                 </span>
                 {starsGained > 0 && (
                   <span class="text-[var(--color-success)] font-medium">
-                    +{starsGained}
+                    +{starsGained.toLocaleString()} stars today
                   </span>
                 )}
               </div>

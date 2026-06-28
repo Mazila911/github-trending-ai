@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="关于" description="关于 GitHub Trending AI 项目">
+  <section class="max-w-3xl mx-auto px-4 py-12">
+    <h1 class="text-3xl font-bold text-[var(--color-text-primary)] mb-8">关于 GTAI</h1>
+
+    <div class="space-y-6 text-[var(--color-text-secondary)] leading-relaxed">
+      <p>
+        <strong class="text-[var(--color-text-primary)]">GitHub Trending AI</strong> 是一个面向 AI 应用开发者的 GitHub 热门开源项目展示网站。我们每天自动追踪 GitHub Trending 中与 AI 相关的项目，通过多维度评分算法进行排名，帮助开发者快速发现高质量的开源工具。
+      </p>
+
+      <h2 class="text-xl font-semibold text-[var(--color-text-primary)] pt-4">核心特性</h2>
+      <ul class="list-disc list-inside space-y-2">
+        <li>每日自动抓取 GitHub Trending 数据</li>
+        <li>AI 多维度评分：代码质量、文档完整度、社区健康、活跃度、创新性</li>
+        <li>智能专题分类，按技术领域组织项目</li>
+        <li>全文搜索，快速定位感兴趣的项目</li>
+        <li>纯静态架构，访问速度极快</li>
+      </ul>
+
+      <h2 class="text-xl font-semibold text-[var(--color-text-primary)] pt-4">技术栈</h2>
+      <ul class="list-disc list-inside space-y-2">
+        <li>框架：Astro 5 (SSG)</li>
+        <li>样式：Tailwind CSS v4</li>
+        <li>搜索：Pagefind</li>
+        <li>部署：Cloudflare Pages</li>
+        <li>CI/CD：GitHub Actions</li>
+      </ul>
+
+      <h2 class="text-xl font-semibold text-[var(--color-text-primary)] pt-4">开源</h2>
+      <p>
+        本项目完全开源，欢迎贡献代码和反馈建议。
+      </p>
+      <a
+        href="https://github.com/Mazila911/github-trending-ai"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-2 mt-2 px-4 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] text-[var(--color-text-primary)] hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-colors"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 08-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub 仓库
+      </a>
+    </div>
+  </section>
+</BaseLayout>

@@ -29,6 +29,7 @@ const languages = [
 
 const sortOptions = [
   { value: 'comprehensive', label: '综合排名' },
+  { value: 'trending', label: 'Trending 最热' },
   { value: 'stars', label: 'Star 最多' },
   { value: 'created', label: '最新创建' },
   { value: 'updated', label: '最近更新' },
@@ -62,7 +63,7 @@ const sortOptions = [
         ))}
       </nav>
 
-      <!-- Language filter -->
+      <!-- Filters -->
       <div class="flex flex-wrap gap-2 sm:contents">
         <div class="relative">
           <label for="language-select" class="sr-only">编程语言</label>
@@ -79,7 +80,22 @@ const sortOptions = [
           </svg>
         </div>
 
-        <!-- Sort filter -->
+        <div class="relative">
+          <label for="stars-select" class="sr-only">星标范围</label>
+          <select
+            id="stars-select"
+            class="appearance-none bg-[var(--color-bg-secondary)] border border-[var(--color-border)] text-[var(--color-text-secondary)] text-sm rounded-lg px-4 py-2 pr-8 cursor-pointer hover:border-[var(--color-accent)]/50 focus:outline-none focus:border-[var(--color-accent)]"
+          >
+            <option value="">全部星标</option>
+            <option value="1k-10k">1k - 10k</option>
+            <option value="10k-100k">10k - 100k</option>
+            <option value="100k+">100k+</option>
+          </select>
+          <svg class="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)] pointer-events-none" viewBox="0 0 16 16" fill="currentColor">
+            <path d="M4.427 7.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 7H4.604a.25.25 0 00-.177.427z"/>
+          </svg>
+        </div>
+
         <div class="relative">
           <label for="sort-select" class="sr-only">排序方式</label>
           <select
@@ -113,6 +129,7 @@ const sortOptions = [
           data-updated={project.pushed_at}
           data-ai-score={project.ai_quality_score}
           data-rank={project.comprehensive_rank}
+          data-trending-score={project.trending_score || 0}
         >
           <ProjectCard project={project} rank={index + 1} />
         </div>
@@ -128,6 +145,7 @@ const sortOptions = [
   <script>
     const periodTabs = document.querySelectorAll('.period-tab');
     const languageSelect = document.getElementById('language-select') as HTMLSelectElement;
+    const starsSelect = document.getElementById('stars-select') as HTMLSelectElement;
     const sortSelect = document.getElementById('sort-select') as HTMLSelectElement;
     const projectList = document.getElementById('project-list')!;
     const resultsCount = document.getElementById('results-count')!;
@@ -136,21 +154,36 @@ const sortOptions = [
 
     let currentPeriod = 'daily';
     let currentLanguage = '';
+    let currentStarsRange = '';
     let currentSort = 'comprehensive';
+    const PAGE_SIZE = 20;
+    let visibleCount = PAGE_SIZE;
+    let filteredItems: HTMLElement[] = [];
+
+    function matchStarsRange(stars: number, range: string): boolean {
+      if (!range) return true;
+      if (range === '1k-10k') return stars >= 1000 && stars < 10000;
+      if (range === '10k-100k') return stars >= 10000 && stars < 100000;
+      if (range === '100k+') return stars >= 100000;
+      return true;
+    }
 
     function applyFilters() {
-      let visible = items;
+      let visible = [...items];
 
-      // Language filter
       if (currentLanguage) {
         visible = visible.filter(el => el.dataset.language === currentLanguage);
       }
+      if (currentStarsRange) {
+        visible = visible.filter(el => matchStarsRange(Number(el.dataset.stars), currentStarsRange));
+      }
 
-      // Hide all, then show visible
       items.forEach(el => el.style.display = 'none');
 
-      // Sort
       switch (currentSort) {
+        case 'trending':
+          visible.sort((a, b) => Number(b.dataset.trendingScore) - Number(a.dataset.trendingScore));
+          break;
         case 'stars':
           visible.sort((a, b) => Number(b.dataset.stars) - Number(a.dataset.stars));
           break;
@@ -169,16 +202,20 @@ const sortOptions = [
           break;
       }
 
-      // Re-append in sorted order and show
-      visible.forEach(el => {
-        el.style.display = '';
+      visible.forEach((el, i) => {
+        el.style.display = i < visibleCount ? '' : 'none';
         projectList.appendChild(el);
       });
 
-      // Update count
-      resultsCount.textContent = `共 ${visible.length} 个项目`;
+      const shown = Math.min(visibleCount, visible.length);
+      if (visible.length === 0) {
+        resultsCount.textContent = '共 0 个项目';
+      } else if (shown < visible.length) {
+        resultsCount.textContent = `显示 ${shown} / ${visible.length} 个项目`;
+      } else {
+        resultsCount.textContent = `已加载全部 ${visible.length} 个项目`;
+      }
 
-      // Empty state
       if (visible.length === 0) {
         emptyState.classList.remove('hidden');
         projectList.classList.add('hidden');
@@ -186,9 +223,18 @@ const sortOptions = [
         emptyState.classList.add('hidden');
         projectList.classList.remove('hidden');
       }
+
+      filteredItems = visible;
     }
 
-    // Period tabs
+    window.addEventListener('scroll', () => {
+      if (visibleCount >= filteredItems.length) return;
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+        visibleCount += PAGE_SIZE;
+        applyFilters();
+      }
+    }, { passive: true });
+
     periodTabs.forEach(tab => {
       tab.addEventListener('click', () => {
         periodTabs.forEach(t => {
@@ -198,20 +244,52 @@ const sortOptions = [
         tab.classList.add('bg-[var(--color-accent)]', 'text-white', 'active');
         tab.classList.remove('text-[var(--color-text-secondary)]');
         currentPeriod = (tab as HTMLElement).dataset.period || 'daily';
+        visibleCount = PAGE_SIZE;
         applyFilters();
       });
     });
 
-    // Language dropdown
     languageSelect.addEventListener('change', () => {
       currentLanguage = languageSelect.value;
+      visibleCount = PAGE_SIZE;
       applyFilters();
     });
 
-    // Sort dropdown
-    sortSelect.addEventListener('change', () => {
-      currentSort = sortSelect.value;
+    starsSelect.addEventListener('change', () => {
+      currentStarsRange = starsSelect.value;
+      visibleCount = PAGE_SIZE;
       applyFilters();
     });
+
+    sortSelect.addEventListener('change', () => {
+      currentSort = sortSelect.value;
+      visibleCount = PAGE_SIZE;
+      applyFilters();
+    });
+
+    applyFilters();
+  </script>
+
+  <!-- Back to Top Button -->
+  <button
+    id="back-to-top"
+    type="button"
+    class="fixed bottom-6 right-6 z-40 hidden w-10 h-10 rounded-full bg-[var(--color-accent)] text-white shadow-lg hover:bg-[var(--color-accent-hover)] transition-all duration-200 items-center justify-center"
+    aria-label="回到顶部"
+  >
+    <svg class="w-5 h-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M14.77 12.79a.75.75 0 01-1.06-.02L10 8.832 6.29 12.77a.75.75 0 11-1.08-1.04l4.25-4.5a.75.75 0 011.08 0l4.25 4.5a.75.75 0 01-.02 1.06z" clip-rule="evenodd"/></svg>
+  </button>
+  <script>
+    const btn = document.getElementById('back-to-top')!;
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 400) {
+        btn.classList.remove('hidden');
+        btn.classList.add('flex');
+      } else {
+        btn.classList.add('hidden');
+        btn.classList.remove('flex');
+      }
+    }, { passive: true });
+    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   </script>
 </BaseLayout>
