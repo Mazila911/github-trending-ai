@@ -177,20 +177,39 @@ async function enrichProject(owner, name) {
 async function generateAIDescription(project) {
   if (!LLM_API_KEY) return null;
 
-  const prompt = `请为以下 GitHub 项目生成：
-1. 中文描述（简洁准确，不超过 200 字）
-2. README 摘要（一句话概括核心价值，不超过 100 字）
+  const prompt = `请为以下 GitHub 开源项目生成两部分内容：
+
+## 第一部分：中文简介
+用一句话简洁准确地描述这个项目做什么，不超过 50 字。用于卡片和列表展示。
+
+## 第二部分：README 深度摘要
+请按照以下结构来总结这个项目，整体风格简约直白，有故事感：
+
+1. 【主题】用一句话点明项目的核心定位和要解决的问题
+
+2. 【核心分点总结】提炼 3-5 个关键特性，每个分点格式如下：
+   - 序号开头
+   - 先写关键词（加粗效果），再写核心总结
+   - 各分点之间空一行
+
+3. 【行动指南】给出 2-3 条面向开发者的现实行动建议（什么场景下该用这个项目、怎么上手），带序号
+
+4. 【金句总述】一句话总结这个项目的价值，要有记忆点
+
+5. 【故事性收尾】用一小段富有画面感的文字，描述使用这个项目后开发者的工作状态变化
 
 项目信息：
 - 名称：${project.full_name}
-- 描述：${project.description}
-- 语言：${project.language}
-- Topics：${(project.topics || []).join(', ')}
+- 英文描述：${project.description || '无'}
+- 编程语言：${project.language || '未知'}
+- Topics：${(project.topics || []).join(', ') || '无'}
+- Stars：${project.stargazers_count || 0}
+- Forks：${project.forks_count || 0}
 
 请以 JSON 格式返回：
 {
-  "description_zh": "中文描述",
-  "readme_summary": "一句话摘要"
+  "description_zh": "一句话中文简介",
+  "readme_summary": "完整的深度摘要（Markdown 格式）"
 }`;
 
   try {
@@ -203,13 +222,14 @@ async function generateAIDescription(project) {
       body: JSON.stringify({
         model: LLM_MODEL,
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3,
+        temperature: 0.5,
+        max_tokens: 1024,
         response_format: { type: 'json_object' },
       }),
     });
 
     if (!response.ok) {
-      console.error(`[AI] OpenAI API error: ${response.status}`);
+      console.error(`[AI] LLM API error: ${response.status}`);
       return null;
     }
 
