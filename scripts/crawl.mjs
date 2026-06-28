@@ -16,7 +16,9 @@ import { fetchWithRateLimit } from './lib/github-api.mjs';
 // ========== 配置 ==========
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+const LLM_API_KEY = process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || '';
+const LLM_API_URL = (process.env.LLM_API_URL || 'https://api.deepseek.com').replace(/\/$/, '');
+const LLM_MODEL = process.env.LLM_MODEL || 'deepseek-v4-flash';
 const DATA_FILE = 'src/data/projects.json';
 const TRENDING_FILE = 'src/data/trending.json';
 const LANGUAGES = ['', 'python', 'typescript', 'javascript', 'rust', 'go'];
@@ -173,7 +175,7 @@ async function enrichProject(owner, name) {
 // ========== AI 描述生成 ==========
 
 async function generateAIDescription(project) {
-  if (!OPENAI_API_KEY) return null;
+  if (!LLM_API_KEY) return null;
 
   const prompt = `请为以下 GitHub 项目生成：
 1. 中文描述（简洁准确，不超过 200 字）
@@ -192,14 +194,14 @@ async function generateAIDescription(project) {
 }`;
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(`${LLM_API_URL}/v1/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${LLM_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: LLM_MODEL,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
         response_format: { type: 'json_object' },
@@ -319,11 +321,11 @@ async function main() {
 
       // 生成 AI 描述（仅新项目或描述变化的项目）
       let aiContent = null;
-      if (OPENAI_API_KEY) {
+      if (LLM_API_KEY) {
         const existingProject = existing.find(p => p.id === details.id);
         if (!existingProject || existingProject.description !== details.description) {
           aiContent = await generateAIDescription(details);
-          await sleep(500); // OpenAI API 速率限制
+          await sleep(500); // LLM API 速率限制
         }
       }
 
