@@ -26,10 +26,10 @@ export function getProjectByFullName(owner: string, name: string): Project | und
 }
 
 export function getTopTrendingProjects(limit: number = 5): Project[] {
-  const trending = trendingData as TrendingData;
-  const ids = trending.projects.slice(0, limit).map(t => t.project_id);
   const projects = projectsData as Project[];
-  return ids.map(id => projects.find(p => p.id === id)).filter(Boolean) as Project[];
+  return [...projects]
+    .sort((a, b) => a.comprehensive_rank - b.comprehensive_rank)
+    .slice(0, limit);
 }
 
 export function getProjectsBySpotlight(slug: string): Project[] {
