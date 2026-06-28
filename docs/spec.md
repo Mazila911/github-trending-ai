@@ -2,7 +2,7 @@
 
 > 面向 AI 应用开发者的 GitHub 热门开源项目展示网站
 >
-> 版本：1.0.0 | 最后更新：2026-06-28
+> 版本：2.0.0 | 最后更新：2026-06-28
 
 ---
 
@@ -47,16 +47,45 @@
 
 | 层面 | 技术选型 | 说明 |
 |------|---------|------|
-| 部署平台 | Cloudflare Pages + Functions | 静态分发 + 边缘 API |
-| 数据抓取 | Cloudflare Worker + Cron Trigger | 定时任务 |
-| 前端框架 | Astro 5 | SSG + Islands 架构 |
+| 部署平台 | Cloudflare Pages | 纯静态托管，免费无限请求 |
+| 数据抓取 | GitHub Actions | 定时构建时抓取数据 |
+| 前端框架 | Astro 5 | SSG 静态生成 |
 | CSS 框架 | Tailwind CSS v4 | 原子化 CSS |
 | 组件库 | shadcn/ui | 可定制组件 |
-| 数据库 | Cloudflare D1 | SQLite，支持 FTS5 |
-| 缓存 | Cloudflare KV + Cache API | 边缘缓存 |
-| 对象存储 | Cloudflare R2 | 图片/静态资源 |
-| 搜索引擎 | D1 FTS5 | 全文搜索 |
-| 月成本 | ~$5 | Workers Paid Plan |
+| 搜索引擎 | Pagefind | 静态搜索，浏览器端本地索引 |
+| CI/CD | GitHub Actions | 每天定时构建 + 自动部署 |
+| 月成本 | **$0** | 完全免费 |
+
+### 1.4 数据更新策略
+
+**更新频率：** 每天 1-2 次（GitHub Trending 按天更新）
+
+**历史数据策略：累积 + 过期清理**
+
+| 策略 | 说明 |
+|------|------|
+| 累积 | 每次构建时，将新抓取的项目合并到历史库 |
+| 标记 | 记录 `last_trending_date` 字段，标记是否当前在 trending |
+| 展示 | 榜单页仅展示当前在 trending 的项目 |
+| 过期 | 清理 90 天未出现在 trending 的项目 |
+| 保留 | AI 评分高的明星项目可标记为"永久保留" |
+
+**数据流：**
+```
+GitHub Actions (每天 1-2 次)
+    │
+    ├─ 抓取当前 GitHub Trending 项目
+    │
+    ├─ 合并到历史项目库
+    │   ├─ 新项目 → 插入
+    │   └─ 已存在 → 更新统计 + last_trending_date
+    │
+    ├─ 清理过期项目 (90 天未 trending 且非明星项目)
+    │
+    ├─ 计算排名和 AI 评分
+    │
+    └─ 生成静态页面 + 搜索索引 → 部署到 Cloudflare Pages
+```
 
 ---
 
@@ -73,7 +102,8 @@
 | 项目详情页 | `/repo/:owner/:name` | SSG | 单个项目详细信息 |
 | 专题页 | `/collections` | SSG | AI 筛选的各类专题集合 |
 | 专题详情页 | `/collection/:slug` | SSG | 某专题下的完整项目列表 |
-| 搜索结果页 | `/search` | CSR | 动态搜索结果 |
+| 搜索结果页 | `/search` | SSG | Pagefind 静态搜索 |
+| 全部项目页 | `/projects` | SSG | 所有历史项目（含非 trending） |
 
 #### 2.1.2 导航关系
 
@@ -380,6 +410,18 @@ GET /api/trending?period=daily&language=python&page=1&limit=20
 
 ### 2.6 搜索功能
 
+**搜索方案：Pagefind（静态搜索）**
+
+Pagefind 是一个静态搜索库，在构建时生成索引，浏览器端本地搜索，无需网络请求。
+
+| 特性 | 说明 |
+|------|------|
+| 原理 | 构建时生成索引文件，浏览器端加载后本地搜索 |
+| 速度 | < 50ms，无网络延迟 |
+| 索引大小 | ~200-800KB（分片按需加载） |
+| 中文支持 | ✅ 支持 |
+| 集成方式 | `npx pagefind --site dist` |
+
 #### 2.6.1 即时搜索（搜索框下拉）
 
 **触发条件：**
@@ -406,11 +448,22 @@ GET /api/trending?period=daily&language=python&page=1&limit=20
 - 编程语言（下拉）
 - 星标范围（下拉）
 - 排序方式：相关度（默认）、Star 最多、最近更新、AI 评分最高
-- 时间范围：创建时间、最近更新时间
 
 **结果统计：** "找到 X 个匹配项目"
 
 **结果展示：** 与榜单卡片样式一致
+
+**Pagefind 配置：**
+```javascript
+// 构建后运行
+npx pagefind --site dist
+
+// 前端使用
+import * as pagefind from '/_pagefind/pagefind.js';
+
+const search = await pagefind.search('llm agent');
+const results = search.results.slice(0, 20);
+```
 
 #### 2.6.3 搜索历史（本地存储）
 
@@ -433,7 +486,7 @@ GET /api/trending?period=daily&language=python&page=1&limit=20
 
 #### 2.6.4 热门搜索
 
-**数据来源：** 后端统计搜索频率，缓存到 KV
+**数据来源：** 构建时统计项目 topics 频率，生成静态热门标签
 
 **展示位置：**
 - Hero 区域的热门标签（硬编码 + 动态结合）
@@ -443,7 +496,38 @@ GET /api/trending?period=daily&language=python&page=1&limit=20
 
 ## 3. 技术规格
 
-### 3.1 项目结构
+### 3.1 架构概述
+
+**纯静态架构：** 所有数据在 GitHub Actions 构建时生成静态页面，Cloudflare Pages 仅负责托管。
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    GitHub Actions (每天 1-2 次)                  │
+│                                                                  │
+│  1. 抓取 GitHub Trending 数据                                    │
+│  2. 合并到历史项目库 (JSON)                                       │
+│  3. 清理过期项目 (90天)                                           │
+│  4. 计算排名和 AI 评分                                           │
+│  5. astro build 生成静态页面                                     │
+│  6. pagefind 生成搜索索引                                        │
+│  7. 部署到 Cloudflare Pages                                      │
+└─────────────────────────────────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Cloudflare Pages (免费)                        │
+│                                                                  │
+│  纯静态文件托管：                                                 │
+│  - HTML 页面（预渲染）                                           │
+│  - CSS / JS                                                      │
+│  - Pagefind 搜索索引                                             │
+│  - 项目图片                                                      │
+│                                                                  │
+│  CDN 全球分发，免费无限请求                                       │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 3.2 项目结构
 
 ```
 github-trending-ai/
@@ -463,69 +547,52 @@ github-trending-ai/
 │   │   │   └── SpotlightCarousel.astro
 │   │   ├── trending/          # 榜单组件
 │   │   │   ├── ProjectCard.astro
-│   │   │   ├── FilterBar.astro
-│   │   │   └── InfiniteScroll.ts
+│   │   │   └── FilterBar.astro
 │   │   ├── project/           # 项目详情组件
 │   │   │   ├── ProjectHeader.astro
 │   │   │   ├── AIScoreCard.astro
-│   │   │   ├── StarChart.ts
 │   │   │   └── RelatedProjects.astro
 │   │   ├── search/            # 搜索组件
-│   │   │   ├── SearchBox.ts    # Islands 组件
-│   │   │   ├── SearchResults.ts
-│   │   │   └── SearchFilters.astro
+│   │   │   └── SearchBox.ts   # Pagefind 搜索
 │   │   ├── collection/        # 专题组件
 │   │   │   ├── CollectionCard.astro
 │   │   │   └── CollectionHeader.astro
 │   │   └── ui/                # 通用 UI 组件
 │   │       ├── Badge.astro
-│   │       ├── Skeleton.astro
-│   │       ├── Pagination.astro
 │   │       └── BackToTop.ts
 │   ├── layouts/               # 页面布局
 │   │   └── BaseLayout.astro
 │   ├── pages/                 # 页面路由
 │   │   ├── index.astro        # 首页
 │   │   ├── trending.astro     # 榜单页
+│   │   ├── projects.astro     # 全部项目页
 │   │   ├── repo/
 │   │   │   └── [owner]/
 │   │   │       └── [name].astro  # 项目详情页
 │   │   ├── collections.astro  # 专题列表页
 │   │   ├── collection/
 │   │   │   └── [slug].astro   # 专题详情页
-│   │   └── search.astro       # 搜索结果页（CSR）
+│   │   └── search.astro       # 搜索结果页
 │   ├── lib/                   # 工具函数
-│   │   ├── db.ts              # D1 数据库操作
-│   │   ├── github.ts          # GitHub API 封装
 │   │   ├── format.ts          # 数字/日期格式化
-│   │   ├── cache.ts           # 缓存操作
-│   │   └── search.ts          # 搜索逻辑
+│   │   └── data.ts            # 数据加载
+│   ├── data/                  # 构建时生成的数据
+│   │   ├── projects.json      # 项目数据
+│   │   ├── trending.json      # 当前 trending 列表
+│   │   └── spotlights.json    # 专题数据
 │   ├── styles/                # 全局样式
 │   │   └── global.css
 │   └── types/                 # TypeScript 类型
 │       └── index.ts
-├── worker/                    # Cron Worker（数据抓取）
-│   ├── src/
-│   │   ├── index.ts           # Worker 入口
-│   │   ├── crawler.ts         # Trending 爬虫
-│   │   ├── github-api.ts      # GitHub API 调用
-│   │   ├── ai-scorer.ts       # AI 评分计算
-│   │   └── spotlight.ts       # 专题筛选
-│   └── wrangler.toml
-├── functions/                 # Pages Functions（API）
-│   └── api/
-│       ├── trending.ts
-│       ├── search.ts
-│       ├── projects/
-│       │   └── [id].ts
-│       ├── spotlights.ts
-│       ├── spotlights/
-│       │   └── [id].ts
-│       └── stats.ts
-├── schema.sql                 # D1 建表 SQL
+├── scripts/                   # 构建脚本
+│   ├── crawl.mjs              # 数据抓取脚本
+│   ├── calculate-scores.mjs   # 评分计算
+│   └── generate-spotlights.mjs # 专题生成
+├── .github/
+│   └── workflows/
+│       └── build.yml          # GitHub Actions 配置
 ├── astro.config.mjs           # Astro 配置
 ├── tailwind.config.mjs        # Tailwind 配置
-├── wrangler.toml              # Pages 部署配置
 ├── package.json
 ├── tsconfig.json
 └── README.md
@@ -538,21 +605,11 @@ github-trending-ai/
 ```javascript
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
-import cloudflare from '@astrojs/cloudflare';
 import tailwind from '@astrojs/tailwind';
-import react from '@astrojs/react';
 
 export default defineConfig({
-  output: 'hybrid', // SSG 为主，部分页面 CSR
-  adapter: cloudflare({
-    platformProxy: {
-      enabled: true,
-    },
-  }),
-  integrations: [
-    tailwind(),
-    react(), // 用于 Islands 组件
-  ],
+  output: 'static', // 纯静态生成
+  integrations: [tailwind()],
   vite: {
     define: {
       'import.meta.env.PUBLIC_SITE_URL': JSON.stringify('https://gtai.dev'),
@@ -566,16 +623,13 @@ export default defineConfig({
 **原则：** 零 JS 默认，仅交互组件使用 Islands
 
 **需要 Islands 的组件：**
-- `SearchBox.ts` — 搜索框即时搜索
-- `InfiniteScroll.ts` — 无限滚动
-- `StarChart.ts` — Star 趋势图表
+- `SearchBox.ts` — Pagefind 搜索
 - `BackToTop.ts` — 回到顶部按钮
-- `SearchResults.ts` — 搜索结果动态加载
 
 **不需要 Islands 的组件（纯 Astro）：**
 - 所有布局组件
 - 卡片组件
-- 筛选组件（使用表单提交）
+- 筛选组件（使用 URL 参数）
 - 页头/页脚
 
 #### 3.2.3 状态管理
@@ -586,305 +640,293 @@ export default defineConfig({
 - 搜索历史：localStorage
 - 主题偏好：localStorage + CSS 变量
 
-### 3.3 后端架构
+### 3.3 数据架构
 
-#### 3.3.1 Pages Functions 路由
+**无后端 API，所有数据在构建时生成静态文件：**
 
-| 路由 | 方法 | 处理文件 | 说明 |
-|------|------|---------|------|
-| `/api/trending` | GET | `functions/api/trending.ts` | 榜单列表 |
-| `/api/search` | GET | `functions/api/search.ts` | 搜索 |
-| `/api/projects/:id` | GET | `functions/api/projects/[id].ts` | 项目详情 |
-| `/api/spotlights` | GET | `functions/api/spotlights.ts` | 专题列表 |
-| `/api/spotlights/:id` | GET | `functions/api/spotlights/[id].ts` | 专题详情 |
-| `/api/stats` | GET | `functions/api/stats.ts` | 统计数据 |
+#### 3.3.1 数据文件
 
-#### 3.3.2 API 中间件
+| 文件 | 说明 | 生成方式 |
+|------|------|---------|
+| `src/data/projects.json` | 所有项目数据 | crawl.mjs 生成 |
+| `src/data/trending.json` | 当前 trending 列表 | crawl.mjs 生成 |
+| `src/data/spotlights.json` | 专题数据 | generate-spotlights.mjs 生成 |
+
+#### 3.3.2 数据加载
 
 ```typescript
-// functions/api/_middleware.ts
-export const onRequest: PagesFunction<Env> = async (context) => {
-  // 1. CORS 处理
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
+// src/lib/data.ts
+import projectsData from '../data/projects.json';
+import trendingData from '../data/trending.json';
+import spotlightsData from '../data/spotlights.json';
 
-  if (context.request.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+export function getProjects() {
+  return projectsData;
+}
 
-  // 2. 缓存检查
-  const cache = caches.default;
-  const cacheKey = new Request(context.request.url, context.request);
-  const cachedResponse = await cache.match(cacheKey);
-  if (cachedResponse) {
-    return new Response(cachedResponse.body, {
-      ...cachedResponse,
-      headers: { ...cachedResponse.headers, ...corsHeaders, 'X-Cache': 'HIT' },
-    });
-  }
+export function getTrendingProjects() {
+  return trendingData;
+}
 
-  // 3. 执行请求
-  const response = await context.next();
+export function getSpotlights() {
+  return spotlightsData;
+}
 
-  // 4. 缓存响应
-  const responseToCache = new Response(response.body, {
-    ...response,
-    headers: {
-      ...response.headers,
-      'Cache-Control': 'public, max-age=1800', // 30 分钟
-    },
-  });
-  context.waitUntil(cache.put(cacheKey, responseToCache.clone()));
+export function getProjectByFullName(owner: string, name: string) {
+  return projectsData.find(p => p.owner_login === owner && p.name === name);
+}
+```
 
-  return new Response(responseToCache.body, {
+#### 3.3.3 搜索方案：Pagefind
+
+```bash
+# 构建后生成搜索索引
+npx pagefind --site dist
+```
+
+```typescript
+// src/components/search/SearchBox.ts
+import * as pagefind from '/_pagefind/pagefind.js';
+
+async function search(query: string) {
+  const results = await pagefind.search(query);
+  return results.results.slice(0, 20);
+}
+```
     ...responseToCache,
     headers: { ...responseToCache.headers, ...corsHeaders, 'X-Cache': 'MISS' },
   });
 };
 ```
 
-### 3.4 数据库设计
+### 3.4 数据结构设计
 
-#### 3.4.1 D1 表结构
+**存储方式：** JSON 文件（构建时生成，无需数据库）
 
-```sql
--- ============================================================
--- 项目主表
--- ============================================================
-CREATE TABLE IF NOT EXISTS projects (
-  id INTEGER PRIMARY KEY,               -- GitHub 仓库 ID
-  full_name TEXT UNIQUE NOT NULL,        -- owner/repo
-  name TEXT NOT NULL,                    -- repo 名称
-  owner_login TEXT NOT NULL,             -- 所有者用户名
-  owner_avatar_url TEXT,                 -- 头像 URL
-  owner_type TEXT DEFAULT 'User',        -- User 或 Organization
-  description TEXT,                      -- 英文描述
-  description_zh TEXT,                   -- 中文描述（AI 翻译）
-  html_url TEXT NOT NULL,                -- GitHub 链接
-  homepage TEXT,                         -- 项目官网
-  language TEXT,                         -- 主要编程语言
-  languages_breakdown TEXT,              -- 语言占比 JSON
-  topics TEXT,                           -- 标签 JSON 数组
-  stargazers_count INTEGER DEFAULT 0,    -- Star 数
-  forks_count INTEGER DEFAULT 0,         -- Fork 数
-  open_issues_count INTEGER DEFAULT 0,   -- 开放 Issue 数
-  watchers_count INTEGER DEFAULT 0,      -- Watcher 数
-  contributors_count INTEGER DEFAULT 0,  -- 贡献者数量
-  size_kb INTEGER DEFAULT 0,             -- 仓库大小
-  license_spdx TEXT,                     -- 许可证 SPDX ID
-  archived INTEGER DEFAULT 0,            -- 是否归档
-  is_fork INTEGER DEFAULT 0,             -- 是否 Fork
-  has_wiki INTEGER DEFAULT 0,
-  has_discussions INTEGER DEFAULT 0,
-  default_branch TEXT DEFAULT 'main',
-  readme_summary TEXT,                   -- README AI 摘要
-  ai_quality_score REAL DEFAULT 0,       -- AI 质量评分 0-100
-  ai_tags TEXT,                          -- AI 标签 JSON 数组
-  trending_score REAL DEFAULT 0,         -- 趋势得分 0-100
-  comprehensive_rank INTEGER,            -- 综合排名
-  star_velocity_7d REAL DEFAULT 0,       -- 近 7 天 Star 日均增速
-  star_velocity_30d REAL DEFAULT 0,      -- 近 30 天 Star 日均增速
-  created_at TEXT,                       -- GitHub 创建时间
-  updated_at TEXT,                       -- GitHub 更新时间
-  pushed_at TEXT,                        -- 最后推送时间
-  created_in_db TEXT DEFAULT (datetime('now')),
-  updated_in_db TEXT DEFAULT (datetime('now'))
-);
-
--- ============================================================
--- 每日快照表
--- ============================================================
-CREATE TABLE IF NOT EXISTS project_daily_snapshots (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  project_id INTEGER NOT NULL,
-  snapshot_date TEXT NOT NULL,
-  stargazers_count INTEGER,
-  forks_count INTEGER,
-  open_issues_count INTEGER,
-  watchers_count INTEGER,
-  trending_stars INTEGER DEFAULT 0,      -- 当日新增 Star
-  trending_score REAL,
-  ai_quality_score REAL,
-  comprehensive_rank INTEGER,
-  UNIQUE(project_id, snapshot_date)
-);
-
--- ============================================================
--- 榜单记录表
--- ============================================================
-CREATE TABLE IF NOT EXISTS trending_snapshots (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  project_id INTEGER NOT NULL,
-  date TEXT NOT NULL,
-  rank INTEGER NOT NULL,
-  trending_stars INTEGER,
-  category TEXT DEFAULT 'overall',       -- overall, python, typescript...
-  period TEXT DEFAULT 'daily'            -- daily, weekly, monthly
-);
-
--- ============================================================
--- 专题表
--- ============================================================
-CREATE TABLE IF NOT EXISTS spotlights (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  slug TEXT UNIQUE NOT NULL,
-  title TEXT NOT NULL,
-  title_zh TEXT,
-  description TEXT,
-  description_zh TEXT,
-  icon TEXT,                             -- emoji 或图标名
-  category TEXT,                         -- 分类
-  ai_criteria TEXT,                      -- AI 筛选条件 JSON
-  project_count INTEGER DEFAULT 0,
-  created_at TEXT DEFAULT (datetime('now')),
-  updated_at TEXT DEFAULT (datetime('now'))
-);
-
--- ============================================================
--- 专题-项目关联表
--- ============================================================
-CREATE TABLE IF NOT EXISTS spotlight_projects (
-  spotlight_id INTEGER NOT NULL,
-  project_id INTEGER NOT NULL,
-  rank INTEGER DEFAULT 0,
-  added_at TEXT DEFAULT (datetime('now')),
-  PRIMARY KEY (spotlight_id, project_id)
-);
-
--- ============================================================
--- FTS5 全文搜索虚拟表
--- ============================================================
-CREATE VIRTUAL TABLE IF NOT EXISTS projects_fts USING fts5(
-  name,
-  description,
-  description_zh,
-  topics,
-  readme_summary,
-  content='projects',
-  content_rowid='id'
-);
-
--- ============================================================
--- FTS5 同步触发器
--- ============================================================
-CREATE TRIGGER IF NOT EXISTS projects_ai AFTER INSERT ON projects BEGIN
-  INSERT INTO projects_fts(rowid, name, description, description_zh, topics, readme_summary)
-  VALUES (new.id, new.name, new.description, new.description_zh, new.topics, new.readme_summary);
-END;
-
-CREATE TRIGGER IF NOT EXISTS projects_ad AFTER DELETE ON projects BEGIN
-  INSERT INTO projects_fts(projects_fts, rowid, name, description, description_zh, topics, readme_summary)
-  VALUES ('delete', old.id, old.name, old.description, old.description_zh, old.topics, old.readme_summary);
-END;
-
-CREATE TRIGGER IF NOT EXISTS projects_au AFTER UPDATE ON projects BEGIN
-  INSERT INTO projects_fts(projects_fts, rowid, name, description, description_zh, topics, readme_summary)
-  VALUES ('delete', old.id, old.name, old.description, old.description_zh, old.topics, old.readme_summary);
-  INSERT INTO projects_fts(rowid, name, description, description_zh, topics, readme_summary)
-  VALUES (new.id, new.name, new.description, new.description_zh, new.topics, new.readme_summary);
-END;
-```
-
-#### 3.4.2 索引设计
-
-```sql
--- 性能索引
-CREATE INDEX IF NOT EXISTS idx_projects_stars ON projects(stargazers_count DESC);
-CREATE INDEX IF NOT EXISTS idx_projects_language ON projects(language);
-CREATE INDEX IF NOT EXISTS idx_projects_trending ON projects(trending_score DESC);
-CREATE INDEX IF NOT EXISTS idx_projects_ai_score ON projects(ai_quality_score DESC);
-CREATE INDEX IF NOT EXISTS idx_projects_rank ON projects(comprehensive_rank);
-CREATE INDEX IF NOT EXISTS idx_projects_pushed ON projects(pushed_at);
-CREATE INDEX IF NOT EXISTS idx_projects_created ON projects(created_at);
-
-CREATE INDEX IF NOT EXISTS idx_snapshots_date ON project_daily_snapshots(snapshot_date);
-CREATE INDEX IF NOT EXISTS idx_snapshots_project ON project_daily_snapshots(project_id);
-
-CREATE INDEX IF NOT EXISTS idx_trending_date ON trending_snapshots(date);
-CREATE INDEX IF NOT EXISTS idx_trending_category ON trending_snapshots(category, date);
-
-CREATE INDEX IF NOT EXISTS idx_spotlight_slug ON spotlights(slug);
-CREATE INDEX IF NOT EXISTS idx_spotlight_proj ON spotlight_projects(project_id);
-```
-
-### 3.5 数据抓取 Worker
-
-#### 3.5.1 Worker 结构
+#### 3.4.1 项目数据结构
 
 ```typescript
-// worker/src/index.ts
-export interface Env {
-  DB: D1Database;
-  CACHE: KVNamespace;
-  GITHUB_TOKEN: string;
+// src/data/projects.json
+interface Project {
+  // 基本信息
+  id: number;                          // GitHub 仓库 ID
+  full_name: string;                   // owner/repo
+  name: string;                        // repo 名称
+  owner_login: string;                 // 所有者用户名
+  owner_avatar_url: string;            // 头像 URL
+  owner_type: 'User' | 'Organization'; // 所有者类型
+  description: string;                 // 英文描述
+  description_zh?: string;             // 中文描述（AI 翻译）
+  html_url: string;                    // GitHub 链接
+  homepage?: string;                   // 项目官网
+
+  // 技术信息
+  language?: string;                   // 主要编程语言
+  languages_breakdown?: Record<string, number>; // 语言占比
+  topics?: string[];                   // 标签列表
+  license_spdx?: string;               // 许可证
+  default_branch: string;              // 默认分支
+
+  // 统计数据
+  stargazers_count: number;            // Star 数
+  forks_count: number;                 // Fork 数
+  open_issues_count: number;           // 开放 Issue 数
+  watchers_count: number;              // Watcher 数
+  contributors_count?: number;         // 贡献者数量
+  size_kb: number;                     // 仓库大小
+
+  // 状态标志
+  archived: boolean;                   // 是否归档
+  is_fork: boolean;                    // 是否 Fork
+  has_wiki: boolean;
+  has_discussions: boolean;
+
+  // AI 分析
+  readme_summary?: string;             // README 摘要
+  ai_quality_score: number;            // AI 质量评分 0-100
+  ai_tags?: string[];                  // AI 标签
+
+  // Trending 数据
+  trending_score: number;              // Trending 分数 0-100
+  comprehensive_rank: number;          // 综合排名
+  star_velocity_7d: number;            // 近 7 天 Star 日均增速
+  star_velocity_30d: number;           // 近 30 天 Star 日均增速
+
+  // 历史追踪
+  first_seen_at: string;               // 首次出现在 trending 的时间
+  last_trending_date: string;          // 最后一次出现在 trending 的日期
+  trending_history: TrendingRecord[];  // 历史 trending 记录
+
+  // 时间戳
+  created_at: string;                  // GitHub 创建时间
+  updated_at: string;                  // GitHub 更新时间
+  pushed_at: string;                   // 最后推送时间
+  crawled_at: string;                  // 最后抓取时间
 }
 
-export interface Env {
-  DB: D1Database;
-  CACHE: KVNamespace;
-  GITHUB_TOKEN: string;
-  OPENAI_API_KEY: string;  // 用于 AI 评分和翻译
+interface TrendingRecord {
+  date: string;                        // 日期 YYYY-MM-DD
+  rank: number;                        // 排名
+  category: string;                    // 分类：overall, python, typescript...
+  period: string;                      // 周期：daily, weekly, monthly
+  stars_gained: number;                // 当日新增 Star
+}
+```
+
+#### 3.4.2 Trending 列表数据结构
+
+```typescript
+// src/data/trending.json
+interface TrendingData {
+  last_updated: string;                // 最后更新时间
+  period: string;                      // daily, weekly, monthly
+  projects: TrendingEntry[];           // 当前 trending 项目列表
 }
 
-export default {
-  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
-    console.log('[Crawler] Starting scheduled crawl...');
+interface TrendingEntry {
+  project_id: number;                  // 关联项目 ID
+  rank: number;                        // 排名
+  stars_gained: number;                // 新增 Star 数
+  category: string;                    // 分类
+}
+```
 
-    try {
-      // 1. 抓取 GitHub Trending
-      const trendingProjects = await crawlTrending();
-      console.log(`[Crawler] Found ${trendingProjects.length} trending projects`);
+#### 3.4.3 专题数据结构
 
-      // 2. 补充 GitHub API 详情
-      const enrichedProjects = await enrichProjects(trendingProjects, env.GITHUB_TOKEN);
-      console.log(`[Crawler] Enriched ${enrichedProjects.length} projects`);
+```typescript
+// src/data/spotlights.json
+interface Spotlight {
+  slug: string;                        // URL slug
+  title: string;                       // 英文标题
+  title_zh: string;                    // 中文标题
+  description: string;                 // 英文描述
+  description_zh: string;              // 中文描述
+  icon: string;                        // emoji 或图标名
+  category: string;                    // 分类
+  project_ids: number[];               // 包含的项目 ID 列表
+  project_count: number;               // 项目数量
+  updated_at: string;                  // 最后更新时间
+}
+```
 
-      // 3. 生成中文描述和 README 摘要
-      const projectsWithAI = await generateAIDescriptions(enrichedProjects, env.OPENAI_API_KEY);
-      console.log(`[Crawler] Generated AI descriptions for ${projectsWithAI.length} projects`);
+#### 3.4.4 历史数据保留策略
 
-      // 4. 写入 D1
-      await upsertProjects(env.DB, projectsWithAI);
-      console.log('[Crawler] Database updated');
+| 数据类型 | 保留策略 | 说明 |
+|----------|---------|------|
+| 当前 trending 项目 | 永久保留 | 只要在 trending 中出现过 |
+| 非 trending 项目 | 90 天过期 | 清理 90 天未出现在 trending 的项目 |
+| 明星项目 (AI >= 75) | 永久保留 | 高质量项目标记为永久保留 |
+| Trending 历史记录 | 保留最近 10 条 | 每个项目最多保留 10 条历史记录 |
 
-      // 5. 更新排名
-      await updateRankings(env.DB);
-      console.log('[Crawler] Rankings updated');
+**清理逻辑：**
+```javascript
+// scripts/cleanup.mjs
+function cleanupProjects(projects) {
+  const now = new Date();
+  const EXPIRY_DAYS = 90;
 
-      // 6. 清除缓存
-      await env.CACHE.put('last_crawl', new Date().toISOString());
-      console.log('[Crawler] Crawl completed successfully');
-    } catch (error) {
-      console.error('[Crawler] Error:', error);
-      throw error;
+  return projects.filter(project => {
+    // 明星项目永久保留
+    if (project.ai_quality_score >= 75 && project.stargazers_count >= 500) {
+      return true;
     }
-  },
-};
+
+    // 当前在 trending 中的项目保留
+    const lastTrending = new Date(project.last_trending_date);
+    const daysSinceTrending = (now - lastTrending) / (1000 * 60 * 60 * 24);
+    if (daysSinceTrending <= 1) {
+      return true;
+    }
+
+    // 过期项目删除
+    return daysSinceTrending <= EXPIRY_DAYS;
+  });
+}
 ```
 
-#### 3.5.2 抓取逻辑
+### 3.5 数据抓取脚本
 
-```typescript
-// worker/src/crawler.ts
-interface TrendingProject {
-  fullName: string;
-  name: string;
-  owner: string;
-  description: string;
-  language: string;
-  starsToday: number;
-  totalStars: number;
-  forks: number;
+**执行环境：** GitHub Actions（每天 1-2 次）
+
+#### 3.5.1 GitHub Actions Workflow
+
+```yaml
+# .github/workflows/build.yml
+name: Build & Deploy
+
+on:
+  schedule:
+    - cron: '0 0,12 * * *'  # 每天 0:00 和 12:00 UTC
+  workflow_dispatch:  # 支持手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Crawl GitHub Trending
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/crawl.mjs
+
+      - name: Calculate scores
+        run: node scripts/calculate-scores.mjs
+
+      - name: Generate spotlights
+        run: node scripts/generate-spotlights.mjs
+
+      - name: Cleanup expired projects
+        run: node scripts/cleanup.mjs
+
+      - name: Build Astro
+        run: npm run build
+
+      - name: Build search index
+        run: npx pagefind --site dist
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name github-trending-ai
+```
+
+#### 3.5.2 抓取脚本
+
+```javascript
+// scripts/crawl.mjs
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const DATA_FILE = 'src/data/projects.json';
+const TRENDING_FILE = 'src/data/trending.json';
+
+// 加载现有数据
+function loadExistingProjects() {
+  if (existsSync(DATA_FILE)) {
+    return JSON.parse(readFileSync(DATA_FILE, 'utf-8'));
+  }
+  return [];
 }
 
-async function crawlTrending(): Promise<TrendingProject[]> {
-  const languages = [
-    '', 'python', 'typescript', 'javascript', 'rust', 'go', 'java', 'c++'
-  ];
-  const projects: TrendingProject[] = [];
+// 抓取 GitHub Trending
+async function crawlTrending() {
+  const languages = ['', 'python', 'typescript', 'javascript', 'rust', 'go'];
+  const projects = [];
 
   for (const lang of languages) {
     const url = lang
@@ -899,105 +941,109 @@ async function crawlTrending(): Promise<TrendingProject[]> {
     await sleep(2000);
   }
 
-  // 去重
   return deduplicateByFullName(projects);
 }
-```
 
-#### 3.5.3 AI 描述生成（中文翻译 + README 摘要）
-
-```typescript
-// worker/src/ai-generator.ts
-interface AIContent {
-  description_zh: string;
-  readme_summary: string;
+// 补充 GitHub API 详情
+async function enrichProject(owner, name) {
+  const response = await fetch(`https://api.github.com/repos/${owner}/${name}`, {
+    headers: {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+    },
+  });
+  return response.json();
 }
 
-async function generateAIDescriptions(
-  projects: EnrichedProject[],
-  apiKey: string
-): Promise<EnrichedProject[]> {
-  const results: EnrichedProject[] = [];
+// 合并数据
+function mergeProjects(existing, trending) {
+  const today = new Date().toISOString().split('T')[0];
+  const merged = new Map(existing.map(p => [p.id, p]));
 
-  for (const project of projects) {
-    try {
-      // 仅对新项目或描述有变化的项目生成 AI 内容
-      const existingProject = await getProjectFromDB(project.id);
-      if (existingProject && existingProject.description === project.description) {
-        results.push({ ...project, ...existingProject });
-        continue;
-      }
+  for (const item of trending) {
+    const existingProject = merged.get(item.id);
 
-      const aiContent = await generateAIContent(project, apiKey);
-      results.push({ ...project, ...aiContent });
-
-      // 速率限制：每秒最多 10 个请求
-      await sleep(100);
-    } catch (error) {
-      console.error(`[AI] Failed for ${project.full_name}:`, error);
-      // 降级：使用英文描述
-      results.push({
-        ...project,
-        description_zh: project.description,
-        readme_summary: project.description?.slice(0, 200),
+    if (existingProject) {
+      // 更新现有项目
+      existingProject.last_trending_date = today;
+      existingProject.trending_history = [
+        { date: today, rank: item.rank, stars_gained: item.starsToday },
+        ...(existingProject.trending_history || []).slice(0, 9),
+      ];
+      // 更新统计数据
+      Object.assign(existingProject, item.details);
+    } else {
+      // 新项目
+      merged.set(item.id, {
+        ...item.details,
+        first_seen_at: today,
+        last_trending_date: today,
+        trending_history: [
+          { date: today, rank: item.rank, stars_gained: item.starsToday },
+        ],
       });
     }
   }
 
-  return results;
+  return Array.from(merged.values());
 }
 
-async function generateAIContent(project: EnrichedProject, apiKey: string): Promise<AIContent> {
-  const prompt = `
-请为以下 GitHub 项目生成：
-1. 中文描述（简洁准确，不超过 200 字）
-2. README 摘要（一句话概括核心价值，不超过 100 字）
+// 主流程
+async function main() {
+  console.log('[Crawler] Starting...');
 
-项目信息：
-- 名称：${project.full_name}
-- 描述：${project.description}
-- 语言：${project.language}
-- Topics：${project.topics?.join(', ')}
+  // 1. 加载现有数据
+  const existing = loadExistingProjects();
+  console.log(`[Crawler] Loaded ${existing.length} existing projects`);
 
-请以 JSON 格式返回：
-{
-  "description_zh": "中文描述",
-  "readme_summary": "一句话摘要"
+  // 2. 抓取 Trending
+  const trending = await crawlTrending();
+  console.log(`[Crawler] Found ${trending.length} trending projects`);
+
+  // 3. 补充详情
+  const enriched = [];
+  for (const item of trending) {
+    try {
+      const details = await enrichProject(item.owner, item.name);
+      enriched.push({ ...item, details });
+      await sleep(1000); // 速率限制
+    } catch (err) {
+      console.error(`[Crawler] Failed: ${item.fullName}`, err.message);
+    }
+  }
+
+  // 4. 合并数据
+  const merged = mergeProjects(existing, enriched);
+  console.log(`[Crawler] Total projects: ${merged.length}`);
+
+  // 5. 保存
+  writeFileSync(DATA_FILE, JSON.stringify(merged, null, 2));
+
+  // 6. 保存 trending 列表
+  writeFileSync(TRENDING_FILE, JSON.stringify({
+    last_updated: new Date().toISOString(),
+    period: 'daily',
+    projects: enriched.map(p => ({
+      project_id: p.id,
+      rank: p.rank,
+      stars_gained: p.starsToday,
+      category: 'overall',
+    })),
+  }, null, 2));
+
+  console.log('[Crawler] Done!');
 }
-`;
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',  // 使用 mini 模型降低成本
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  const data = await response.json();
-  return JSON.parse(data.choices[0].message.content);
-}
+main().catch(console.error);
 ```
 
-#### 3.5.4 GitHub API 速率限制处理
+#### 3.5.3 GitHub API 速率限制处理
 
-```typescript
-// worker/src/github-api.ts
-interface RateLimitInfo {
-  limit: number;
-  remaining: number;
-  reset: number;  // Unix 时间戳
-}
-
-async function fetchWithRateLimit(url: string, token: string): Promise<Response> {
+```javascript
+// scripts/lib/github-api.mjs
+async function fetchWithRateLimit(url, token) {
   const headers = {
-    'Authorization': `Bearer ${token}`,
+    'Authorization': `token ${token}`,
     'Accept': 'application/vnd.github.v3+json',
     'User-Agent': 'GitHub-Trending-AI',
   };
@@ -1011,14 +1057,12 @@ async function fetchWithRateLimit(url: string, token: string): Promise<Response>
     const resetTime = parseInt(response.headers.get('X-RateLimit-Reset') || '0');
 
     if (remaining < 100) {
-      // 接近限制，等待重置
       const waitTime = Math.max(0, (resetTime * 1000) - Date.now()) + 1000;
       console.log(`[API] Rate limit low (${remaining}), waiting ${waitTime}ms`);
       await sleep(waitTime);
     }
 
     if (response.status === 403 || response.status === 429) {
-      // 已被限流，等待重置
       const waitTime = Math.max(0, (resetTime * 1000) - Date.now()) + 1000;
       console.log(`[API] Rate limited, waiting ${waitTime}ms`);
       await sleep(waitTime);
@@ -1035,121 +1079,16 @@ async function fetchWithRateLimit(url: string, token: string): Promise<Response>
 
   throw new Error('GitHub API max retries exceeded');
 }
-
-// 批量获取项目详情（使用 GraphQL 减少请求数）
-async function fetchProjectsBatch(fullNames: string[], token: string): Promise<any[]> {
-  const query = `
-    query($repos: [String!]!) {
-      nodes(ids: $repos) {
-        ... on Repository {
-          id
-          nameWithOwner
-          description
-          stargazerCount
-          forkCount
-          watchers { totalCount }
-          issues(states: OPEN) { totalCount }
-          licenseInfo { spdxId }
-          primaryLanguage { name }
-          repositoryTopics(first: 20) { nodes { topic { name } } }
-          createdAt
-          updatedAt
-          pushedAt
-          isArchived
-          isFork
-          homepageUrl
-          hasWikiEnabled
-          hasDiscussionsEnabled
-          defaultBranchRef { name }
-          collaborators { totalCount }
-        }
-      }
-    }
-  `;
-
-  // GraphQL 单次请求可获取多个项目，大幅减少 API 调用
-  const response = await fetchWithRateLimit('https://api.github.com/graphql', token);
-  // ... 处理响应
-}
 ```
 
-#### 3.5.5 Star Velocity 计算
+#### 3.5.4 构建频率说明
 
-```typescript
-// worker/src/velocity.ts
+| 构建时间 | 频率 | 说明 |
+|---------|------|------|
+| 00:00 UTC | 每天 | 跟踪 daily trending 更新 |
+| 12:00 UTC | 每天 | 可选，捕获更实时的变化 |
 
-/**
- * 计算 Star 增速
- *
- * @param currentStars - 当前 Star 数
- * @param snapshotDate - 目标日期的快照 Star 数
- * @param days - 天数
- * @returns 日均 Star 增速
- */
-function calculateVelocity(currentStars: number, snapshotDate: number, days: number): number {
-  if (days <= 0) return 0;
-  return (currentStars - snapshotDate) / days;
-}
-
-// 在排名更新时计算
-async function updateStarVelocity(db: D1Database) {
-  const projects = await db.prepare(`
-    SELECT
-      p.id,
-      p.stargazers_count,
-      s7.stargazers_count as stars_7d_ago,
-      s30.stargazers_count as stars_30d_ago
-    FROM projects p
-    LEFT JOIN project_daily_snapshots s7
-      ON p.id = s7.project_id AND s7.snapshot_date = date('now', '-7 days')
-    LEFT JOIN project_daily_snapshots s30
-      ON p.id = s30.project_id AND s30.snapshot_date = date('now', '-30 days')
-  `).all();
-
-  for (const project of projects.results) {
-    const velocity7d = calculateVelocity(
-      project.stargazers_count,
-      project.stars_7d_ago || project.stargazers_count,
-      7
-    );
-    const velocity30d = calculateVelocity(
-      project.stargazers_count,
-      project.stars_30d_ago || project.stargazers_count,
-      30
-    );
-
-    await db.prepare(`
-      UPDATE projects
-      SET star_velocity_7d = ?, star_velocity_30d = ?
-      WHERE id = ?
-    `).bind(velocity7d, velocity30d, project.id).run();
-  }
-}
-```
-
-#### 3.5.6 Cron 配置
-
-```toml
-# worker/wrangler.toml
-name = "github-trending-crawler"
-main = "src/index.ts"
-compatibility_date = "2024-01-01"
-
-[vars]
-GITHUB_TOKEN = "xxx"  # 生产环境使用 secrets
-
-[[d1_databases]]
-binding = "DB"
-database_name = "github-trending-ai"
-database_id = "xxx"
-
-[[kv_namespaces]]
-binding = "CACHE"
-id = "xxx"
-
-[triggers]
-crons = ["0 */6 * * *"]  # 每 6 小时执行一次
-```
+**说明：** GitHub Trending 的 daily 列表每天更新一次，因此每天构建 1-2 次即可。如果需要更频繁的更新，可以手动触发 workflow。
 
 ---
 
@@ -1550,110 +1489,110 @@ function getProjectTier(project) {
 
 ## 7. 部署规格
 
-### 7.1 Cloudflare 资源配置
+### 7.1 Cloudflare Pages 配置
 
-#### 7.1.1 D1 数据库
+**纯静态托管，无需 D1/KV/R2/Functions**
 
-```bash
-# 创建数据库
-wrangler d1 create github-trending-ai
-
-# 执行建表 SQL
-wrangler d1 execute github-trending-ai --file=./schema.sql
-
-# 验证
-wrangler d1 execute github-trending-ai --command "SELECT name FROM sqlite_master WHERE type='table'"
-```
-
-#### 7.1.2 KV 命名空间
+#### 7.1.1 创建 Pages 项目
 
 ```bash
-# 创建 KV
-wrangler kv:namespace create CACHE
+# 安装 wrangler CLI
+npm install -g wrangler
 
-# 输出类似：
-# { binding = "CACHE", id = "xxxxxxxxxx" }
+# 登录 Cloudflare
+wrangler login
+
+# 创建 Pages 项目
+wrangler pages project create github-trending-ai --production-branch main
 ```
 
-#### 7.1.3 R2 存储桶
+#### 7.1.2 配置自定义域名（可选）
 
-```bash
-# 创建 R2 桶
-wrangler r2 bucket create github-trending-ai-assets
-```
+在 Cloudflare Dashboard > Pages > github-trending-ai > Custom domains 中添加域名。
 
-### 7.2 wrangler.toml（Pages）
+### 7.2 GitHub Secrets 配置
 
-```toml
-# wrangler.toml
-name = "github-trending-ai"
-compatibility_date = "2024-01-01"
+在 GitHub 仓库 Settings > Secrets and variables > Actions 中添加：
 
-[[d1_databases]]
-binding = "DB"
-database_name = "github-trending-ai"
-database_id = "xxx"  # 替换为实际 ID
+| Secret 名称 | 说明 | 获取方式 |
+|-------------|------|---------|
+| `GITHUB_TOKEN` | GitHub PAT | Settings > Developer settings > Personal access tokens |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API Token | Dashboard > My Profile > API Tokens |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 账户 ID | Dashboard > 右侧边栏 |
+| `OPENAI_API_KEY` | OpenAI API Key（可选） | platform.openai.com |
 
-[[kv_namespaces]]
-binding = "CACHE"
-id = "xxx"  # 替换为实际 ID
+**GitHub Token 权限：**
+- `repo` — 访问仓库（用于 API 调用）
 
-[[r2_buckets]]
-binding = "ASSETS"
-bucket_name = "github-trending-ai-assets"
+**Cloudflare API Token 权限：**
+- Account > Cloudflare Pages > Edit
 
-[vars]
-PUBLIC_SITE_URL = "https://gtai.dev"
-```
-
-### 7.3 环境变量
-
-| 变量 | 说明 | 设置方式 |
-|------|------|---------|
-| `GITHUB_TOKEN` | GitHub Personal Access Token | `wrangler secret put` |
-| `PUBLIC_SITE_URL` | 站点 URL | wrangler.toml |
-| `OPENAI_API_KEY` | OpenAI API（AI 评分用） | `wrangler secret put` |
-
-### 7.4 构建和部署脚本
+### 7.3 构建和部署脚本
 
 ```json
 {
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "wrangler pages dev dist",
-    "deploy": "astro build && wrangler pages deploy dist",
-    "db:init": "wrangler d1 execute github-trending-ai --file=./schema.sql",
-    "db:seed": "wrangler d1 execute github-trending-ai --file=./seed.sql",
-    "worker:deploy": "cd worker && wrangler deploy",
-    "worker:test": "cd worker && wrangler dev"
+    "build:full": "node scripts/crawl.mjs && node scripts/calculate-scores.mjs && node scripts/generate-spotlights.mjs && npm run build && npx pagefind --site dist",
+    "preview": "astro preview",
+    "crawl": "node scripts/crawl.mjs",
+    "deploy": "npm run build:full && wrangler pages deploy dist"
   }
 }
 ```
 
-### 7.5 CI/CD（GitHub Actions）
+### 7.4 GitHub Actions Workflow
 
 ```yaml
-# .github/workflows/deploy.yml
-name: Deploy
+# .github/workflows/build.yml
+name: Build & Deploy
 
 on:
-  push:
-    branches: [main]
+  schedule:
+    - cron: '0 0,12 * * *'  # 每天 0:00 和 12:00 UTC
+  workflow_dispatch:  # 支持手动触发
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - run: npm ci
-      - run: npm run build
+      - name: Install dependencies
+        run: npm ci
 
-      - uses: cloudflare/wrangler-action@v3
+      - name: Crawl GitHub Trending
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: node scripts/crawl.mjs
+
+      - name: Calculate scores
+        run: node scripts/calculate-scores.mjs
+
+      - name: Generate spotlights
+        run: node scripts/generate-spotlights.mjs
+
+      - name: Cleanup expired projects
+        run: node scripts/cleanup.mjs
+
+      - name: Build Astro
+        run: npm run build
+
+      - name: Build search index
+        run: npx pagefind --site dist
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -1672,27 +1611,25 @@ jobs:
 | LCP | < 2.0s | Largest Contentful Paint |
 | CLS | < 0.1 | Cumulative Layout Shift |
 | TTI | < 2.0s | Time to Interactive |
-| TTFB | < 200ms | Time to First Byte |
-| 搜索响应 | < 200ms | API 响应时间 |
+| TTFB | < 100ms | 纯静态，CDN 直接响应 |
+| 搜索响应 | < 50ms | Pagefind 本地搜索，无网络延迟 |
 | 页面大小 | < 100KB | 首页 HTML + CSS（不含图片） |
 
 ### 8.2 缓存策略
 
 | 资源 | 缓存层 | TTL | 说明 |
 |------|--------|-----|------|
-| 页面 HTML | Cloudflare CDN | 1 小时 | SSG 页面 |
-| API 响应 | Cache API | 30 分钟 | /api/trending 等 |
-| 搜索结果 | KV | 5 分钟 | 热门搜索词 |
-| 项目详情 | Cache API | 1 小时 | 变化不频繁 |
-| 静态资源（CSS/JS） | CDN | 1 年 | 带 hash 的文件名 |
-| 图片 | R2 + CDN | 1 天 | 项目头像等 |
+| 页面 HTML | Cloudflare CDN | 自动 | 静态文件自动缓存 |
+| CSS/JS | CDN | 1 年 | 带 hash 的文件名 |
+| Pagefind 索引 | CDN | 自动 | 分片加载 |
+| 图片 | CDN | 自动 | 项目头像等 |
 | 字体 | CDN | 1 年 | woff2 格式 |
 
 ### 8.3 优化方案
 
-1. **SSG 预渲染** — 榜单、专题页面构建时生成，CDN 直接分发
+1. **纯静态预渲染** — 所有页面构建时生成，CDN 直接分发
 2. **零 JS 默认** — 列表页纯 HTML+CSS，减少 JS 传输
-3. **Islands 按需加载** — 搜索、图表等交互组件懒加载
+3. **Pagefind 按需加载** — 搜索索引分片，首次加载 < 200KB
 4. **图片优化** — WebP 格式 + 懒加载 + blur placeholder
 5. **字体优化** — `font-display: swap` + 系统字体回退
 6. **预加载** — `<link rel="preload">` 关键资源
@@ -1703,38 +1640,33 @@ jobs:
 
 ## 9. 成本估算
 
-### 9.1 Cloudflare 免费额度
+### 9.1 Cloudflare 免费计划
 
 | 资源 | 免费额度 | 本项目预估用量 | 是否充足 |
 |------|---------|---------------|---------|
 | Pages 请求 | 无限 | 主要流量 | ✅ |
-| Pages Functions | 50 万/月 | 10-30 万/月 | ✅ |
-| Workers 请求 | 10 万/天 | 4 次/天 | ✅ |
-| D1 读取 | 1000 万/天 | 5-20 万/天 | ✅ |
-| D1 写入 | 100 万/天 | 1-5 万/天 | ✅ |
-| D1 存储 | 5GB | 50-200MB | ✅ |
-| KV 读取 | 10 万/天 | 2-5 万/天 | ✅ |
-| KV 写入 | 1000/天 | 100-500/天 | ✅ |
-| R2 存储 | 10GB | 1-2GB | ✅ |
-| R2 Class A | 100 万/月 | 1 万/月 | ✅ |
-| R2 Class B | 1000 万/月 | 50 万/月 | ✅ |
+| Pages 构建 | 500 次/月 | ~60 次/月（每天 2 次） | ✅ |
+| 带宽 | 无限 | - | ✅ |
 
-### 9.2 付费需求
+### 9.2 GitHub Actions 免费计划
 
-**Workers Paid Plan — $5/月**
-
-必需原因：
-- Cron Triggers（数据抓取）仅在付费计划可用
-- Workers CPU 时间从 10ms 提升到 30s
+| 资源 | 免费额度 | 本项目预估用量 | 是否充足 |
+|------|---------|---------------|---------|
+| 构建时间 | 无限（公开仓库） | ~60 分钟/月 | ✅ |
+| 存储 | 500MB | ~50MB | ✅ |
 
 ### 9.3 总成本
 
 | 项目 | 月费 |
 |------|------|
-| Cloudflare Workers Paid | $5 |
+| Cloudflare Pages | $0 |
+| GitHub Actions | $0 |
 | GitHub API Token | 免费 |
+| OpenAI API（可选） | ~$1-3/月 |
 | 域名（可选） | ~$10/年 |
-| **总计** | **~$5/月** |
+| **总计** | **$0-3/月** |
+
+**完全免费！** （OpenAI API 为可选，用于生成中文描述）
 
 ---
 
@@ -1745,14 +1677,15 @@ jobs:
 | 功能点 | 验收标准 | 优先级 |
 |--------|---------|--------|
 | 首页展示 | Hero 区域 + Top 5 榜单 + AI 专题 | P0 |
-| 榜单页 | 完整排名列表，支持筛选排序无限滚动 | P0 |
-| 项目详情 | 完整信息展示 + AI 评分 + 趋势图 | P0 |
+| 榜单页 | 完整排名列表，支持筛选 | P0 |
+| 项目详情 | 完整信息展示 + AI 评分 | P0 |
 | 专题系统 | 8 个预设专题，自动筛选展示 | P0 |
-| 搜索功能 | 即时搜索 + 结果页 + 筛选 | P0 |
+| 搜索功能 | Pagefind 即时搜索 + 结果页 | P0 |
 | 响应式 | 5 个断点正常显示 | P0 |
 | 深色模式 | 默认深色，支持亮色切换 | P1 |
-| 数据抓取 | Cron 自动抓取 GitHub Trending | P0 |
+| 数据抓取 | GitHub Actions 自动抓取 | P0 |
 | AI 评分 | 多维度评分 + 明星项目标记 | P0 |
+| 历史数据 | 累积 + 90 天过期清理 | P0 |
 
 ### 10.2 性能验收
 
@@ -1761,16 +1694,18 @@ jobs:
 | FCP | < 1.0s |
 | LCP | < 2.0s |
 | CLS | < 0.1 |
-| 搜索 API | < 200ms |
+| TTFB | < 100ms |
+| 搜索响应 | < 50ms |
 
 ### 10.3 部署验收
 
 | 检查项 | 验收标准 |
 |--------|---------|
 | Cloudflare Pages | 部署成功，可访问 |
-| D1 数据库 | 表创建成功，数据可读写 |
-| Cron Worker | 定时任务正常执行 |
-| API 端点 | 所有 API 返回正确数据 |
+| GitHub Actions | 定时任务正常执行 |
+| 数据抓取 | Trending 数据正确抓取 |
+| 静态页面 | 所有页面正常渲染 |
+| 搜索功能 | Pagefind 搜索正常工作 |
 | HTTPS | 自动启用 SSL |
 
 ---
@@ -1781,4 +1716,4 @@ jobs:
 
 ---
 
-*文档结束*
+*文档版本：2.0.0 | 最后更新：2026-06-28*
