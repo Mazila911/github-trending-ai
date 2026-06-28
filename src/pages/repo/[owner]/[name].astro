@@ -162,6 +162,26 @@ const pageDescription = project.description_zh || project.description || '';
       </div>
     </section>
 
+    <!-- Timeline Info -->
+    <section class="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 mb-6">
+      <div class="flex flex-wrap items-center gap-6 text-sm text-[var(--color-text-secondary)]">
+        <span class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-[var(--color-text-muted)]" viewBox="0 0 16 16" fill="currentColor"><path d="M4.75 0a.75.75 0 01.75.75V2h5V.75a.75.75 0 011.5 0V2h1.25c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0113.25 16H2.75A1.75 1.75 0 011 14.25V3.75C1 2.784 1.784 2 2.75 2H4V.75A.75.75 0 014.75 0zm0 3.5h8.5a.25.25 0 01.25.25V6h-11V3.75a.25.25 0 01.25-.25h2zm-2.25 4v6.75c0 .138.112.25.25.25h10.5a.25.25 0 00.25-.25V7.5h-11z"/></svg>
+          创建于 {formatDate(project.created_at)}
+        </span>
+        <span class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-[var(--color-text-muted)]" viewBox="0 0 16 16" fill="currentColor"><path d="M1.5 8a6.5 6.5 0 1113 0 6.5 6.5 0 01-13 0zM8 0 8 0 100 16A8 8 0 008 0zm.5 4.75a.75.75 0 00-1.5 0v3.5a.75.75 0 00.37.65l2.5 1.5a.75.75 0 00.76-1.3L8.5 7.94V4.75z"/></svg>
+          最后更新 {formatDate(project.pushed_at)}
+        </span>
+        {project.trending_history && project.trending_history.length > 0 && project.trending_history[0].stars_gained > 0 && (
+          <span class="flex items-center gap-2 text-[var(--color-success)] font-medium">
+            <svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+            +{project.trending_history[0].stars_gained.toLocaleString()} stars today
+          </span>
+        )}
+      </div>
+    </section>
+
     <!-- AI Score Card -->
     <section class="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 mb-6">
       <div class="flex items-center justify-between mb-5">

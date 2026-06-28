@@ -25,13 +25,15 @@ const rankColorClass = rank === 1
 
 const history = project.trending_history || [];
 const previousRank = history.length > 1 ? history[1].rank : null;
-const isNew = history.length <= 1;
+const firstSeen = project.first_seen_at ? new Date(project.first_seen_at) : null;
+const daysSinceFirstSeen = firstSeen ? (Date.now() - firstSeen.getTime()) / (1000 * 60 * 60 * 24) : 999;
+const isNew = daysSinceFirstSeen <= 7;
 let rankChange: 'up' | 'down' | 'same' | 'new' = 'same';
 let rankDiff = 0;
 
 if (isNew) {
   rankChange = 'new';
-} else if (previousRank !== null) {
+} else if (history.length > 1 && previousRank !== null) {
   rankDiff = previousRank - rank;
   if (rankDiff > 0) rankChange = 'up';
   else if (rankDiff < 0) rankChange = 'down';
