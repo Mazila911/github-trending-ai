@@ -8,6 +8,13 @@ function sleep(ms) {
 }
 
 function buildPrompt(project) {
+  const name = project.full_name;
+  const desc = project.description || '无';
+  const lang = project.language || '未知';
+  const topics = (project.topics || []).join(', ') || '无';
+  const stars = project.stargazers_count || 0;
+  const forks = project.forks_count || 0;
+
   return `你是一位技术文档专家。请根据以下 GitHub 项目信息，生成两个字段：
 
 1. description_zh：一句话中文描述（不超过50字），用于卡片展示
@@ -20,12 +27,12 @@ function buildPrompt(project) {
 - 【故事性收尾】一小段生动描写，描绘开发者使用该项目后工作方式的变化
 
 项目信息：
-- 名称：${project.full_name}
-- 描述：${project.description || '无'}
-- 语言：${project.language || '未知'}
-- 主题：${(project.topics || []).join(', ') || '无'}
-- Star 数：${project.stargazers_count || 0}
-- Fork 数：${project.forks_count || 0}
+- 名称：${name}
+- 描述：${desc}
+- 语言：${lang}
+- 主题：${topics}
+- Star 数：${stars}
+- Fork 数：${forks}
 
 请以 JSON 格式返回，包含 description_zh 和 readme_summary 两个字段。`;
 }
@@ -39,14 +46,23 @@ async function main() {
   const raw = readFileSync(DATA_FILE, 'utf-8');
   const projects = JSON.parse(raw);
 
-  console.log(`共 ${projects.length} 个项目待处理`);
+  // 过滤出需要处理的项目：没有 readme_summary 或没有 description_zh 的项目
+  const needsProcessing = projects.filter(p => !p.readme_summary || !p.description_zh);
+  const skipped = projects.length - needsProcessing.length;
+
+  console.log(`[Summary] 共 ${projects.length} 个项目，${skipped} 个已有摘要（跳过），${needsProcessing.length} 个待处理`);
+
+  if (needsProcessing.length === 0) {
+    console.log('[Summary] 所有项目已有摘要，无需处理');
+    return;
+  }
 
   let updated = 0;
   let failed = 0;
 
-  for (let i = 0; i < projects.length; i++) {
-    const project = projects[i];
-    console.log(`[${i + 1}/${projects.length}] 处理: ${project.full_name}`);
+  for (let i = 0; i < needsProcessing.length; i++) {
+    const project = needsProcessing[i];
+    console.log(`[${i + 1}/${needsProcessing.length}] 处理: ${project.full_name}`);
 
     try {
       const prompt = buildPrompt(project);
@@ -72,14 +88,14 @@ async function main() {
     }
 
     // 请求间隔
-    if (i < projects.length - 1) {
+    if (i < needsProcessing.length - 1) {
       await sleep(500);
     }
   }
 
   // 最终保存
   writeFileSync(DATA_FILE, JSON.stringify(projects, null, 2), 'utf-8');
-  console.log(`\n完成！已更新: ${updated}, 失败: ${failed}, 总计: ${projects.length}`);
+  console.log(`\n完成！已更新: ${updated}, 失败: ${failed}, 跳过: ${skipped}, 总计: ${projects.length}`);
 }
 
 main().catch(console.error);

@@ -22,6 +22,24 @@ export function formatNumber(num: number): string {
   return num.toLocaleString('en-US');
 }
 
+export function normalizeSummaryMarkdown(raw: string): string {
+  let text = raw.trim();
+
+  // Normalize section headers: "## 【xxx】" or "###【xxx】" -> "#### 【xxx】"
+  text = text.replace(/^#{1,4}\s*(【[^】]+】)/gm, '#### $1');
+
+  // Plain "【xxx】" without any # prefix -> "#### 【xxx】"
+  text = text.replace(/^(【[^】]+】)/gm, '#### $1');
+
+  // Ensure blank line before each section header for consistent spacing
+  text = text.replace(/([^\n])\n(#### 【)/g, '$1\n\n$2');
+
+  // Remove duplicate blank lines (max 2 consecutive newlines)
+  text = text.replace(/\n{3,}/g, '\n\n');
+
+  return text;
+}
+
 export function getLanguageColor(language: string): string {
   const colors: Record<string, string> = {
     Python: '#3572A5',

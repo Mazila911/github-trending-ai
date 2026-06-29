@@ -339,11 +339,13 @@ async function main() {
       console.log(`[Crawler] Enriching ${item.fullName} (${rank}/${trending.length})`);
       const details = await enrichProject(item.owner, item.name);
 
-      // 生成 AI 描述（仅新项目或描述变化的项目）
+      // 生成 AI 描述（仅新项目或缺少摘要的项目）
       let aiContent = null;
       if (LLM_API_KEY) {
         const existingProject = existing.find(p => p.id === details.id);
-        if (!existingProject || existingProject.description !== details.description) {
+        const hasAIContent = existingProject && existingProject.readme_summary && existingProject.description_zh;
+        const descChanged = existingProject && existingProject.description !== details.description;
+        if (!existingProject || !hasAIContent || descChanged) {
           aiContent = await generateAIDescription(details);
           await sleep(500); // LLM API 速率限制
         }
