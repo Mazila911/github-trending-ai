@@ -25,16 +25,25 @@ export function formatNumber(num: number): string {
 export function normalizeSummaryMarkdown(raw: string): string {
   let text = raw.trim();
 
-  // Normalize section headers: "## 【xxx】" or "###【xxx】" -> "#### 【xxx】"
-  text = text.replace(/^#{1,4}\s*(【[^】]+】)/gm, '#### $1');
+  // Handle "## 【xxx】content" -> split into header + content paragraph
+  text = text.replace(/^#{1,4}\s*(【[^】]+】)\s*(.+)$/gm, '#### $1\n\n$2');
 
-  // Plain "【xxx】" without any # prefix -> "#### 【xxx】"
-  text = text.replace(/^(【[^】]+】)/gm, '#### $1');
+  // Handle "## 【xxx】" alone -> "#### 【xxx】"
+  text = text.replace(/^#{1,4}\s*(【[^】]+】)\s*$/gm, '#### $1');
 
-  // Ensure blank line before each section header for consistent spacing
+  // Handle plain "【xxx】content" -> split into header + content paragraph
+  text = text.replace(/^(【[^】]+】)\s*(.+)$/gm, '#### $1\n\n$2');
+
+  // Handle plain "【xxx】" alone -> "#### 【xxx】"
+  text = text.replace(/^(【[^】]+】)\s*$/gm, '#### $1');
+
+  // Ensure blank line before each section header
   text = text.replace(/([^\n])\n(#### 【)/g, '$1\n\n$2');
 
-  // Remove duplicate blank lines (max 2 consecutive newlines)
+  // Ensure blank line after each section header
+  text = text.replace(/^(#### 【[^】]+】)\n(?!\n)/gm, '$1\n\n');
+
+  // Remove excessive blank lines (max 2 consecutive newlines)
   text = text.replace(/\n{3,}/g, '\n\n');
 
   return text;
