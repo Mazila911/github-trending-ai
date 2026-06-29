@@ -3,6 +3,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Badge from '../../../components/ui/Badge.astro';
 import { getProjects, getProjectByFullName } from '../../../lib/data';
 import { formatStars, formatDate, formatNumber, getLanguageColor } from '../../../lib/format';
+import { marked } from 'marked';
 import type { Project } from '../../../types/index';
 
 export function getStaticPaths() {
@@ -57,6 +58,7 @@ const relatedProjects = allProjects
   .slice(0, 3);
 
 const pageDescription = project.description_zh || project.description || '';
+const readmeHtml = project.readme_summary ? marked(project.readme_summary) : '';
 ---
 
 <BaseLayout title={project.full_name} description={pageDescription}>
@@ -231,8 +233,8 @@ const pageDescription = project.description_zh || project.description || '';
     <!-- README Summary -->
     {project.readme_summary && (
       <section class="bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-[var(--radius-lg)] p-6 mb-6">
-        <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">README 摘要</h2>
-        <div class="text-[var(--color-text-secondary)] leading-relaxed prose prose-invert prose-sm max-w-none" set:html={project.readme_summary.replace(/\n/g, '<br />')} />
+        <h2 class="text-lg font-semibold text-[var(--color-text-primary)] mb-3">项目摘要</h2>
+        <div class="text-[var(--color-text-secondary)] leading-relaxed prose prose-invert prose-sm max-w-none [&_strong]:text-[var(--color-text-primary)] [&_h1]:text-base [&_h2]:text-base [&_h3]:text-sm [&_h1]:text-[var(--color-text-primary)] [&_h2]:text-[var(--color-text-primary)] [&_h3]:text-[var(--color-text-primary)] [&_li]:my-1 [&_p]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ul]:list-disc [&_ul]:pl-5" set:html={readmeHtml} />
       </section>
     )}
 
