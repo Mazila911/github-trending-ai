@@ -25,6 +25,12 @@ export function formatNumber(num: number): string {
 export function normalizeSummaryMarkdown(raw: string): string {
   let text = raw.trim();
 
+  // Handle "- 【xxx】content" -> split into header + content paragraph
+  text = text.replace(/^-\s*(【[^】]+】)\s*(.+)$/gm, '#### $1\n\n$2');
+
+  // Handle "- 【xxx】" alone -> "#### 【xxx】"
+  text = text.replace(/^-\s*(【[^】]+】)\s*$/gm, '#### $1');
+
   // Handle "## 【xxx】content" -> split into header + content paragraph
   text = text.replace(/^#{1,4}\s*(【[^】]+】)\s*(.+)$/gm, '#### $1\n\n$2');
 

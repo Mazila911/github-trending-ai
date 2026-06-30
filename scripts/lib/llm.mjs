@@ -4,7 +4,7 @@
  */
 
 const LLM_API_KEY = process.env.LLM_API_KEY || '';
-const LLM_API_URL = process.env.LLM_API_URL || 'https://api.deepseek.com';
+const LLM_API_URL = (process.env.LLM_API_URL || 'https://api.deepseek.com').replace(/\/+$/, '').replace(/\/v1$/, '');
 const LLM_MODEL = process.env.LLM_MODEL || 'deepseek-v4-flash';
 
 function sleep(ms) {
@@ -24,7 +24,7 @@ export async function callLLM(prompt, options = {}) {
   if (!LLM_API_KEY) return null;
 
   const { temperature = 0.3, jsonMode = false, maxTokens = 512 } = options;
-  const url = `${LLM_API_URL.replace(/\/$/, '')}/v1/chat/completions`;
+  const url = `${LLM_API_URL}/v1/chat/completions`;
 
   const body = {
     model: LLM_MODEL,

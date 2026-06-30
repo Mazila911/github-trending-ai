@@ -17,7 +17,7 @@ import { fetchWithRateLimit } from './lib/github-api.mjs';
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const LLM_API_KEY = process.env.LLM_API_KEY || process.env.OPENAI_API_KEY || '';
-const LLM_API_URL = (process.env.LLM_API_URL || 'https://api.deepseek.com').replace(/\/$/, '');
+const LLM_API_URL = (process.env.LLM_API_URL || 'https://api.deepseek.com').replace(/\/+$/, '').replace(/\/v1$/, '');
 const LLM_MODEL = process.env.LLM_MODEL || 'deepseek-v4-flash';
 const DATA_FILE = 'src/data/projects.json';
 const TRENDING_FILE = 'src/data/trending.json';
