@@ -1,29 +1,29 @@
 {
-  "last_updated": "2026-10-09T18:05:01.822Z",
+  "last_updated": "2026-10-10T04:28:26.942Z",
   "period": "daily",
   "projects": [
     {
       "project_id": 173228436,
       "rank": 1,
-      "stars_gained": 285,
+      "stars_gained": 273,
       "category": "overall"
     },
     {
       "project_id": 331293626,
       "rank": 2,
-      "stars_gained": 33,
+      "stars_gained": 31,
       "category": "overall"
     },
     {
       "project_id": 221981891,
       "rank": 3,
-      "stars_gained": 87,
+      "stars_gained": 75,
       "category": "overall"
     },
     {
       "project_id": 254832799,
       "rank": 4,
-      "stars_gained": 102,
+      "stars_gained": 110,
       "category": "overall"
     },
     {
@@ -35,19 +35,19 @@
     {
       "project_id": 519832,
       "rank": 6,
-      "stars_gained": 48,
+      "stars_gained": 46,
       "category": "overall"
     },
     {
       "project_id": 455229168,
       "rank": 7,
-      "stars_gained": 89,
+      "stars_gained": 94,
       "category": "overall"
     },
     {
       "project_id": 208325027,
       "rank": 8,
-      "stars_gained": 50,
+      "stars_gained": 34,
       "category": "overall"
     },
     {
@@ -59,25 +59,25 @@
     {
       "project_id": 51905353,
       "rank": 10,
-      "stars_gained": 6,
+      "stars_gained": 8,
       "category": "overall"
     },
     {
       "project_id": 243546335,
       "rank": 11,
-      "stars_gained": 55,
+      "stars_gained": 53,
       "category": "overall"
     },
     {
       "project_id": 77726177,
       "rank": 12,
-      "stars_gained": 40,
+      "stars_gained": 41,
       "category": "overall"
     },
     {
       "project_id": 135614069,
       "rank": 13,
-      "stars_gained": 11,
+      "stars_gained": 10,
       "category": "overall"
     },
     {
@@ -89,666 +89,672 @@
     {
       "project_id": 468576060,
       "rank": 15,
-      "stars_gained": 63,
+      "stars_gained": 60,
       "category": "overall"
     },
     {
       "project_id": 515368123,
       "rank": 16,
-      "stars_gained": 34,
+      "stars_gained": 32,
       "category": "overall"
     },
     {
       "project_id": 496605552,
       "rank": 17,
-      "stars_gained": 11,
+      "stars_gained": 13,
       "category": "overall"
     },
     {
       "project_id": 552661142,
       "rank": 18,
-      "stars_gained": 79,
+      "stars_gained": 80,
       "category": "overall"
     },
     {
       "project_id": 189285554,
       "rank": 19,
-      "stars_gained": 32,
+      "stars_gained": 29,
       "category": "overall"
     },
     {
       "project_id": 175592968,
       "rank": 20,
-      "stars_gained": 4,
+      "stars_gained": 3,
       "category": "overall"
     },
     {
       "project_id": 263727855,
       "rank": 21,
-      "stars_gained": 20,
+      "stars_gained": 23,
       "category": "overall"
     },
     {
       "project_id": 11171548,
       "rank": 22,
-      "stars_gained": 12,
+      "stars_gained": 10,
       "category": "overall"
     },
     {
       "project_id": 245704608,
       "rank": 23,
-      "stars_gained": 12,
+      "stars_gained": 8,
+      "category": "overall"
+    },
+    {
+      "project_id": 458648791,
+      "rank": 24,
+      "stars_gained": 45,
       "category": "overall"
     },
     {
       "project_id": 176982014,
-      "rank": 24,
+      "rank": 25,
       "stars_gained": 10,
       "category": "overall"
     },
     {
       "project_id": 406930975,
-      "rank": 25,
-      "stars_gained": 27,
+      "rank": 26,
+      "stars_gained": 25,
       "category": "overall"
     },
     {
       "project_id": 190776339,
-      "rank": 26,
-      "stars_gained": 9,
+      "rank": 27,
+      "stars_gained": 4,
       "category": "overall"
     },
     {
       "project_id": 235901813,
-      "rank": 27,
-      "stars_gained": 16,
+      "rank": 28,
+      "stars_gained": 18,
       "category": "overall"
     },
     {
       "project_id": 125266328,
-      "rank": 28,
-      "stars_gained": 14,
-      "category": "overall"
-    },
-    {
-      "project_id": 540842713,
       "rank": 29,
       "stars_gained": 14,
       "category": "overall"
     },
     {
-      "project_id": 315490189,
+      "project_id": 540842713,
       "rank": 30,
+      "stars_gained": 13,
+      "category": "overall"
+    },
+    {
+      "project_id": 315490189,
+      "rank": 31,
       "stars_gained": 28,
       "category": "overall"
     },
     {
       "project_id": 264818686,
-      "rank": 31,
-      "stars_gained": 11,
+      "rank": 32,
+      "stars_gained": 15,
       "category": "overall"
     },
     {
       "project_id": 121360155,
-      "rank": 32,
+      "rank": 33,
       "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 20470449,
-      "rank": 33,
+      "rank": 34,
       "stars_gained": 3,
       "category": "overall"
     },
     {
       "project_id": 466864356,
-      "rank": 34,
-      "stars_gained": 7,
+      "rank": 35,
+      "stars_gained": 4,
       "category": "overall"
     },
     {
       "project_id": 47203045,
-      "rank": 35,
+      "rank": 36,
       "stars_gained": 1,
       "category": "overall"
     },
     {
       "project_id": 163788469,
-      "rank": 36,
+      "rank": 37,
       "stars_gained": 5,
       "category": "overall"
     },
     {
       "project_id": 319261190,
-      "rank": 37,
+      "rank": 38,
       "stars_gained": 12,
       "category": "overall"
     },
     {
       "project_id": 534011733,
-      "rank": 38,
+      "rank": 39,
       "stars_gained": 6,
       "category": "overall"
     },
     {
       "project_id": 31181767,
-      "rank": 39,
-      "stars_gained": 8,
+      "rank": 40,
+      "stars_gained": 2,
       "category": "overall"
     },
     {
       "project_id": 266417772,
-      "rank": 40,
-      "stars_gained": 15,
+      "rank": 41,
+      "stars_gained": 39,
       "category": "overall"
     },
     {
       "project_id": 41279279,
-      "rank": 41,
+      "rank": 42,
       "stars_gained": 4,
       "category": "overall"
     },
     {
       "project_id": 494232964,
-      "rank": 42,
-      "stars_gained": 5,
+      "rank": 43,
+      "stars_gained": 3,
       "category": "overall"
     },
     {
       "project_id": 77213120,
-      "rank": 43,
+      "rank": 44,
       "stars_gained": 15,
       "category": "overall"
     },
     {
       "project_id": 519577891,
-      "rank": 44,
-      "stars_gained": 65,
+      "rank": 45,
+      "stars_gained": 72,
       "category": "overall"
     },
     {
       "project_id": 165536154,
-      "rank": 45,
-      "stars_gained": 7,
+      "rank": 46,
+      "stars_gained": 5,
       "category": "overall"
     },
     {
       "project_id": 193215554,
-      "rank": 46,
-      "stars_gained": 124,
+      "rank": 47,
+      "stars_gained": 138,
       "category": "overall"
     },
     {
       "project_id": 348060227,
-      "rank": 47,
-      "stars_gained": 35,
+      "rank": 48,
+      "stars_gained": 23,
       "category": "overall"
     },
     {
       "project_id": 525592995,
-      "rank": 48,
-      "stars_gained": 39,
+      "rank": 49,
+      "stars_gained": 41,
       "category": "overall"
     },
     {
       "project_id": 407242578,
-      "rank": 49,
-      "stars_gained": 0,
+      "rank": 50,
+      "stars_gained": 3,
       "category": "overall"
     },
     {
       "project_id": 192624594,
-      "rank": 50,
+      "rank": 51,
       "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 485926312,
-      "rank": 51,
-      "stars_gained": 4,
+      "rank": 52,
+      "stars_gained": 2,
       "category": "overall"
     },
     {
       "project_id": 7530570,
-      "rank": 52,
+      "rank": 53,
       "stars_gained": 5,
       "category": "overall"
     },
     {
       "project_id": 262236530,
-      "rank": 53,
+      "rank": 54,
       "stars_gained": 1,
       "category": "overall"
     },
     {
       "project_id": 568098118,
-      "rank": 54,
-      "stars_gained": 53,
+      "rank": 55,
+      "stars_gained": 60,
       "category": "overall"
     },
     {
       "project_id": 265601040,
-      "rank": 55,
-      "stars_gained": 3,
+      "rank": 56,
+      "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 257913595,
-      "rank": 56,
-      "stars_gained": 5,
+      "rank": 57,
+      "stars_gained": 7,
       "category": "overall"
     },
     {
       "project_id": 291438522,
-      "rank": 57,
-      "stars_gained": 29,
+      "rank": 58,
+      "stars_gained": 24,
       "category": "overall"
     },
     {
       "project_id": 461908156,
-      "rank": 58,
-      "stars_gained": 62,
+      "rank": 59,
+      "stars_gained": 72,
       "category": "overall"
     },
     {
       "project_id": 300422142,
-      "rank": 59,
+      "rank": 60,
       "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 349372179,
-      "rank": 60,
-      "stars_gained": 2,
+      "rank": 61,
+      "stars_gained": 3,
       "category": "overall"
     },
     {
       "project_id": 574104779,
-      "rank": 61,
-      "stars_gained": 4,
+      "rank": 62,
+      "stars_gained": 5,
       "category": "overall"
     },
     {
       "project_id": 467856408,
-      "rank": 62,
+      "rank": 63,
       "stars_gained": 9,
       "category": "overall"
     },
     {
       "project_id": 85031442,
-      "rank": 63,
-      "stars_gained": 43,
+      "rank": 64,
+      "stars_gained": 42,
       "category": "overall"
     },
     {
       "project_id": 23083156,
-      "rank": 64,
-      "stars_gained": 16,
+      "rank": 65,
+      "stars_gained": 19,
       "category": "overall"
     },
     {
       "project_id": 14747598,
-      "rank": 65,
-      "stars_gained": 8,
+      "rank": 66,
+      "stars_gained": 4,
       "category": "overall"
     },
     {
       "project_id": 517190864,
-      "rank": 66,
+      "rank": 67,
       "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 253044228,
-      "rank": 67,
-      "stars_gained": 6,
-      "category": "overall"
-    },
-    {
-      "project_id": 490985210,
       "rank": 68,
-      "stars_gained": 6,
-      "category": "overall"
-    },
-    {
-      "project_id": 205453332,
-      "rank": 69,
       "stars_gained": 3,
       "category": "overall"
     },
     {
-      "project_id": 106087444,
+      "project_id": 490985210,
+      "rank": 69,
+      "stars_gained": 4,
+      "category": "overall"
+    },
+    {
+      "project_id": 205453332,
       "rank": 70,
-      "stars_gained": 11,
+      "stars_gained": 4,
+      "category": "overall"
+    },
+    {
+      "project_id": 106087444,
+      "rank": 71,
+      "stars_gained": 19,
       "category": "overall"
     },
     {
       "project_id": 16089035,
-      "rank": 71,
+      "rank": 72,
       "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 289191277,
-      "rank": 72,
-      "stars_gained": 1,
+      "rank": 73,
+      "stars_gained": 2,
       "category": "overall"
     },
     {
       "project_id": 216617910,
-      "rank": 73,
+      "rank": 74,
       "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 20895915,
-      "rank": 74,
-      "stars_gained": 1,
+      "rank": 75,
+      "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 108708339,
-      "rank": 75,
+      "rank": 76,
       "stars_gained": 2,
       "category": "overall"
     },
     {
       "project_id": 559442741,
-      "rank": 76,
-      "stars_gained": 0,
-      "category": "overall"
-    },
-    {
-      "project_id": 231208785,
       "rank": 77,
       "stars_gained": 1,
       "category": "overall"
     },
     {
-      "project_id": 444190165,
+      "project_id": 231208785,
       "rank": 78,
       "stars_gained": 1,
       "category": "overall"
     },
     {
-      "project_id": 80317682,
+      "project_id": 444190165,
       "rank": 79,
+      "stars_gained": 1,
+      "category": "overall"
+    },
+    {
+      "project_id": 80317682,
+      "rank": 80,
       "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 354955148,
-      "rank": 80,
-      "stars_gained": 4,
+      "rank": 81,
+      "stars_gained": 6,
       "category": "overall"
     },
     {
       "project_id": 528152092,
-      "rank": 81,
-      "stars_gained": 3,
-      "category": "overall"
-    },
-    {
-      "project_id": 121380371,
       "rank": 82,
       "stars_gained": 2,
       "category": "overall"
     },
     {
-      "project_id": 357728969,
+      "project_id": 121380371,
       "rank": 83,
-      "stars_gained": 23,
+      "stars_gained": 1,
+      "category": "overall"
+    },
+    {
+      "project_id": 357728969,
+      "rank": 84,
+      "stars_gained": 28,
       "category": "overall"
     },
     {
       "project_id": 165522651,
-      "rank": 84,
-      "stars_gained": 72,
+      "rank": 85,
+      "stars_gained": 75,
       "category": "overall"
     },
     {
       "project_id": 299354207,
-      "rank": 85,
-      "stars_gained": 109,
+      "rank": 86,
+      "stars_gained": 106,
       "category": "overall"
     },
     {
       "project_id": 261124045,
-      "rank": 86,
-      "stars_gained": 14,
+      "rank": 87,
+      "stars_gained": 11,
       "category": "overall"
     },
     {
       "project_id": 322484700,
-      "rank": 87,
-      "stars_gained": 14,
+      "rank": 88,
+      "stars_gained": 13,
       "category": "overall"
     },
     {
       "project_id": 245166720,
-      "rank": 88,
-      "stars_gained": 34,
+      "rank": 89,
+      "stars_gained": 26,
       "category": "overall"
     },
     {
       "project_id": 21938243,
-      "rank": 89,
-      "stars_gained": 25,
+      "rank": 90,
+      "stars_gained": 26,
       "category": "overall"
     },
     {
       "project_id": 460615268,
-      "rank": 90,
-      "stars_gained": 2,
-      "category": "overall"
-    },
-    {
-      "project_id": 105363726,
       "rank": 91,
       "stars_gained": 2,
       "category": "overall"
     },
     {
-      "project_id": 575340621,
+      "project_id": 105363726,
       "rank": 92,
-      "stars_gained": 6,
+      "stars_gained": 2,
+      "category": "overall"
+    },
+    {
+      "project_id": 575340621,
+      "rank": 93,
+      "stars_gained": 8,
       "category": "overall"
     },
     {
       "project_id": 90793418,
-      "rank": 93,
-      "stars_gained": 24,
+      "rank": 94,
+      "stars_gained": 34,
       "category": "overall"
     },
     {
       "project_id": 181782286,
-      "rank": 94,
-      "stars_gained": 0,
+      "rank": 95,
+      "stars_gained": 2,
       "category": "overall"
     },
     {
       "project_id": 511691380,
-      "rank": 95,
-      "stars_gained": 1,
+      "rank": 96,
+      "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 444541448,
-      "rank": 96,
+      "rank": 97,
       "stars_gained": 2,
       "category": "overall"
     },
     {
       "project_id": 393045142,
-      "rank": 97,
+      "rank": 98,
       "stars_gained": 9,
       "category": "overall"
     },
     {
       "project_id": 138552196,
-      "rank": 98,
+      "rank": 99,
       "stars_gained": 50,
       "category": "overall"
     },
     {
       "project_id": 148686316,
-      "rank": 99,
+      "rank": 100,
       "stars_gained": 9,
       "category": "overall"
     },
     {
       "project_id": 136510559,
-      "rank": 100,
+      "rank": 101,
       "stars_gained": 5,
       "category": "overall"
     },
     {
       "project_id": 268163609,
-      "rank": 101,
-      "stars_gained": 12,
+      "rank": 102,
+      "stars_gained": 11,
       "category": "overall"
     },
     {
       "project_id": 537233603,
-      "rank": 102,
+      "rank": 103,
       "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 230660669,
-      "rank": 103,
-      "stars_gained": 10,
-      "category": "overall"
-    },
-    {
-      "project_id": 406346103,
       "rank": 104,
       "stars_gained": 8,
       "category": "overall"
     },
     {
-      "project_id": 208728772,
+      "project_id": 406346103,
       "rank": 105,
-      "stars_gained": 9,
+      "stars_gained": 19,
+      "category": "overall"
+    },
+    {
+      "project_id": 208728772,
+      "rank": 106,
+      "stars_gained": 7,
       "category": "overall"
     },
     {
       "project_id": 46089560,
-      "rank": 106,
+      "rank": 107,
       "stars_gained": 2,
       "category": "overall"
     },
     {
       "project_id": 167596393,
-      "rank": 107,
-      "stars_gained": 14,
-      "category": "overall"
-    },
-    {
-      "project_id": 15045751,
       "rank": 108,
       "stars_gained": 18,
       "category": "overall"
     },
     {
-      "project_id": 41986369,
+      "project_id": 15045751,
       "rank": 109,
-      "stars_gained": 5,
+      "stars_gained": 14,
+      "category": "overall"
+    },
+    {
+      "project_id": 41986369,
+      "rank": 110,
+      "stars_gained": 4,
       "category": "overall"
     },
     {
       "project_id": 13807606,
-      "rank": 110,
-      "stars_gained": 30,
+      "rank": 111,
+      "stars_gained": 27,
       "category": "overall"
     },
     {
       "project_id": 440752086,
-      "rank": 111,
-      "stars_gained": 23,
+      "rank": 112,
+      "stars_gained": 22,
       "category": "overall"
     },
     {
       "project_id": 333303663,
-      "rank": 112,
-      "stars_gained": 5,
+      "rank": 113,
+      "stars_gained": 4,
       "category": "overall"
     },
     {
       "project_id": 134017286,
-      "rank": 113,
-      "stars_gained": 58,
+      "rank": 114,
+      "stars_gained": 55,
       "category": "overall"
     },
     {
       "project_id": 420503947,
-      "rank": 114,
-      "stars_gained": 23,
+      "rank": 115,
+      "stars_gained": 19,
       "category": "overall"
     },
     {
       "project_id": 237523442,
-      "rank": 115,
-      "stars_gained": 47,
+      "rank": 116,
+      "stars_gained": 43,
       "category": "overall"
     },
     {
       "project_id": 212613049,
-      "rank": 116,
-      "stars_gained": 25,
+      "rank": 117,
+      "stars_gained": 24,
       "category": "overall"
     },
     {
       "project_id": 526081371,
-      "rank": 117,
-      "stars_gained": 9,
+      "rank": 118,
+      "stars_gained": 12,
       "category": "overall"
     },
     {
       "project_id": 57912964,
-      "rank": 118,
+      "rank": 119,
       "stars_gained": 1,
       "category": "overall"
     },
     {
       "project_id": 154643390,
-      "rank": 119,
-      "stars_gained": 13,
+      "rank": 120,
+      "stars_gained": 8,
       "category": "overall"
     },
     {
       "project_id": 206214867,
-      "rank": 120,
+      "rank": 121,
       "stars_gained": 9,
       "category": "overall"
     },
     {
       "project_id": 10567197,
-      "rank": 121,
-      "stars_gained": 4,
+      "rank": 122,
+      "stars_gained": 2,
       "category": "overall"
     },
     {
       "project_id": 327859577,
-      "rank": 122,
-      "stars_gained": 7,
+      "rank": 123,
+      "stars_gained": 5,
       "category": "overall"
     },
     {
       "project_id": 6443435,
-      "rank": 123,
-      "stars_gained": 3,
+      "rank": 124,
+      "stars_gained": 6,
       "category": "overall"
     },
     {
       "project_id": 83623770,
-      "rank": 124,
+      "rank": 125,
       "stars_gained": 0,
       "category": "overall"
     },
     {
       "project_id": 178079595,
-      "rank": 125,
+      "rank": 126,
       "stars_gained": 1,
       "category": "overall"
     }
